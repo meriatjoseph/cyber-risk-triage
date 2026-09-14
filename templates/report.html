@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TawasolPay — Top 5 Cyber Risks</title>
+<style>
+  :root {
+    --bg: #0b0f17; --panel: #131a26; --panel2: #182233; --text: #e7edf5; --muted: #93a2b8;
+    --accent: #ff5a5f; --accent2: #ffb020; --good: #35d07f; --line: #26324a; --chip: #202b40;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background: var(--bg); color: var(--text); font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.5; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+  header h1 { font-size: 1.6rem; margin-bottom:4px; }
+  header p.sub { color: var(--muted); margin-top:0; }
+  .advisory { background: #241014; border:1px solid #5a2530; border-radius:12px; padding:14px 18px; margin: 18px 0; }
+  .advisory-tag { display:inline-block; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color: var(--accent); border:1px solid #5a2530; border-radius:6px; padding:3px 9px; margin-bottom:8px; }
+  .advisory p { margin: 6px 0 0; font-size:0.9rem; color:#e6c9cc; }
+  .advisory p.campaigns { color: var(--muted); font-size:0.82rem; }
+  .summary { display:flex; flex-wrap:wrap; gap:12px; margin: 20px 0 36px; }
+  .stat { background: var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 16px; min-width:110px; }
+  .stat .n { font-size:1.4rem; font-weight:700; }
+  .stat .l { font-size:0.75rem; color: var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .card { background: var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px 24px; margin-bottom:22px; }
+  .card-head { display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .rank { font-size:0.85rem; color: var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em;}
+  .title { font-size:1.25rem; font-weight:700; margin: 2px 0 2px; }
+  .score-pill { font-weight:800; font-size:1.05rem; padding:6px 14px; border-radius:999px; background: var(--panel2); border:1px solid var(--line); white-space:nowrap; }
+  .score-hi { color: var(--accent); }
+  .score-mid { color: var(--accent2); }
+  .score-lo { color: var(--good); }
+  .badges { margin: 10px 0 14px; display:flex; flex-wrap:wrap; gap:8px; }
+  .badge { font-size:0.72rem; padding:4px 9px; border-radius:6px; background: var(--chip); color: var(--muted); border:1px solid var(--line); }
+  .badge.on { color: var(--text); }
+  .badge.danger { border-color:#5a2530; color:#ff9aa0; background:#2a141a; }
+  .badge.warn { border-color:#5a4a1f; color:#ffd27a; background:#2a2314; }
+  .badge.ok { border-color:#1f5a3a; color:#7be6ac; background:#0f2a1c; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; margin-bottom: 14px; }
+  @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+  .field label { display:block; font-size:0.72rem; color: var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px;}
+  .field div.val { font-size:0.92rem; }
+  .why { background: var(--panel2); border-left:3px solid var(--accent2); border-radius:8px; padding:12px 16px; margin: 14px 0; font-size:0.95rem; }
+  .why b { color: var(--accent2); }
+  .threat-box { border-left:3px solid var(--accent); background:#1c1216; border-radius:8px; padding:12px 16px; margin: 10px 0; font-size:0.9rem; }
+  .threat-box.none { border-left-color: var(--line); background: var(--panel2); color: var(--muted); }
+  .nist { margin-top: 16px; }
+  .nist h4 { margin: 0 0 8px; font-size:0.85rem; text-transform:uppercase; letter-spacing:.04em; color: var(--muted); }
+  .control { background:#0f1622; border:1px solid var(--line); border-radius:10px; padding:12px 16px; margin-bottom:10px; }
+  .control .cid { font-weight:700; color:#8ec4ff; }
+  .control .sim { float:right; font-size:0.75rem; color: var(--muted); }
+  .control p { margin: 6px 0 0; font-size:0.87rem; color: #cfd8e6; white-space:pre-wrap; }
+  footer { color: var(--muted); font-size:0.8rem; margin-top: 40px; border-top:1px solid var(--line); padding-top:16px; }
+  a.link { color: #8ec4ff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>TawasolPay — Top 5 Prioritised Cyber Risks</h1>
+    <p class="sub">AI-assisted risk assistant for the CISO board briefing. Ranked by internet exposure, real-world active exploitation, threat-campaign match, business criticality, and missing compensating controls — <b>not</b> CVSS alone. Remediation guidance retrieved live from the real NIST SP&nbsp;800-53 Rev&nbsp;5 control catalog.</p>
+  </header>
+
+  <div class="advisory">
+    <span class="advisory-tag">MDR Advisory — Risk level: {{ advisory.risk_level }}</span>
+    <p>{{ advisory.executive_overview }}</p>
+    <p class="campaigns">Named active campaigns: {{ advisory.campaign_names | join(', ') }}</p>
+  </div>
+
+  <div class="summary">
+    <div class="stat"><div class="n">{{ summary.assets }}</div><div class="l">Assets</div></div>
+    <div class="stat"><div class="n">{{ summary.vulnerabilities }}</div><div class="l">Vulnerabilities</div></div>
+    <div class="stat"><div class="n">{{ summary.threat_intel }}</div><div class="l">Threat intel records</div></div>
+    <div class="stat"><div class="n">{{ summary.business_services }}</div><div class="l">Business services</div></div>
+    <div class="stat"><div class="n">{{ summary.kev_matches }}</div><div class="l">Top-5 in real CISA KEV</div></div>
+  </div>
+
+  {% for e in entries %}
+  {% set r = e.risk %}
+  {% set s = e.score %}
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="rank">Risk #{{ e.rank }}</div>
+        <div class="title">{{ r.asset_name }} &middot; {{ r.vulnerability_name }}</div>
+      </div>
+      <div class="score-pill {{ 'score-hi' if s.total >= 75 else ('score-mid' if s.total >= 45 else 'score-lo') }}">
+        {{ "%.0f"|format(s.total) }} / 100
+      </div>
+    </div>
+
+    <div class="badges">
+      <span class="badge {{ 'danger' if r.internet_exposed else '' }}">{{ 'Internet-exposed' if r.internet_exposed else 'Internal only' }}</span>
+      <span class="badge {{ 'danger' if r.kev_listed else '' }}">{{ 'In CISA KEV' if r.kev_listed else 'Not in KEV' }}</span>
+      {% if r.kev_ransomware_known %}<span class="badge danger">KEV: known ransomware use</span>{% endif %}
+      <span class="badge {{ 'danger' if r.has_campaign_match else '' }}">{{ 'Active campaign match' if r.has_campaign_match else 'No campaign match' }}</span>
+      <span class="badge {{ 'ok' if r.edr_installed else 'warn' }}">{{ 'EDR installed' if r.edr_installed else 'No EDR' }}</span>
+      <span class="badge {{ 'ok' if r.patch_available else 'warn' }}">{{ 'Patch available' if r.patch_available else 'No patch available' }}</span>
+      <span class="badge {{ 'warn' if not r.auth_required else '' }}">{{ 'Unauthenticated exploit' if not r.auth_required else 'Auth required to exploit' }}</span>
+      <span class="badge">CVSS {{ r.cvss }} ({{ r.severity }})</span>
+    </div>
+
+    <div class="grid">
+      <div class="field"><label>Asset</label><div class="val">{{ r.asset_name }} — {{ r.asset_type }}, {{ r.environment }}, {{ r.location }} (owner: {{ r.owner_team }})</div></div>
+      <div class="field"><label>Vulnerability</label><div class="val">{{ r.vulnerability_name }} ({{ r.cve }}) — {{ r.affected_component }}</div></div>
+      <div class="field"><label>Business service at risk</label><div class="val">{{ r.business_service }} (owner: {{ r.business_owner }})<br>{{ r.business_impact }}</div></div>
+      <div class="field"><label>Business context</label><div class="val">Customer-facing: {{ 'Yes' if r.customer_facing else 'No' }} &middot; Compliance: {{ r.compliance_scope }}{% if r.rto_hours %} &middot; RTO: {{ r.rto_hours|int }}h{% endif %}</div></div>
+    </div>
+
+    {% if r.threat_matches %}
+      {% for m in r.threat_matches %}
+      <div class="threat-box">
+        <b>{{ m.threat_actor }} / "{{ m.campaign_name }}"</b> &mdash; {{ m.exploit_maturity }}, {{ m.confidence }} confidence,
+        ransomware-associated: {{ 'Yes' if m.ransomware_association else 'No' }} (last seen {{ m.active_last_seen }})
+        <p style="margin:6px 0 0; color:#cbb; font-size:0.85rem;">{{ m.summary }}</p>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="threat-box none">No named threat-intelligence campaign currently targets this CVE — this risk is driven by exposure, business criticality, and missing controls.</div>
+    {% endif %}
+
+    <div class="why"><b>Why it ranks here:</b> {{ e.why_it_ranks_here }}</div>
+
+    <div class="nist">
+      <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
+      {% for c in e.nist_controls %}
+      <div class="control">
+        <span class="sim">similarity {{ "%.2f"|format(c.similarity) }}</span>
+        <span class="cid">{{ c.control_id }}</span> — {{ c.title }} <span style="color:var(--muted); font-size:0.78rem;">({{ c.family }})</span>
+        <p>{{ (c.statement or c.discussion)[:420] }}{% if (c.statement or c.discussion)|length > 420 %}…{% endif %}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <footer>
+    Data: internal asset/vuln/threat-intel/business-service CSVs (structured, joined via SQL) +
+    live cross-reference against the real <a class="link" href="https://github.com/cisagov/kev-data" target="_blank">CISA KEV catalog</a> +
+    retrieval-augmented lookup over the real <a class="link" href="https://github.com/usnistgov/oscal-content" target="_blank">NIST SP 800-53 Rev 5</a> control catalog.
+    Markdown version: <a class="link" href="/report.md">/report.md</a> &middot; JSON: <a class="link" href="/api/top5">/api/top5</a>
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TawasolPay — Top 5 Cyber Risks</title>
+<style>
+  :root {
+    --bg: #0b0f17; --panel: #131a26; --panel2: #182233; --text: #e7edf5; --muted: #93a2b8;
+    --accent: #ff5a5f; --accent2: #ffb020; --good: #35d07f; --line: #26324a; --chip: #202b40;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background: var(--bg); color: var(--text); font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.5; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+  header h1 { font-size: 1.6rem; margin-bottom:4px; }
+  header p.sub { color: var(--muted); margin-top:0; }
+  .advisory { background: #241014; border:1px solid #5a2530; border-radius:12px; padding:14px 18px; margin: 18px 0; }
+  .advisory-tag { display:inline-block; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color: var(--accent); border:1px solid #5a2530; border-radius:6px; padding:3px 9px; margin-bottom:8px; }
+  .advisory p { margin: 6px 0 0; font-size:0.9rem; color:#e6c9cc; }
+  .advisory p.campaigns { color: var(--muted); font-size:0.82rem; }
+  .summary { display:flex; flex-wrap:wrap; gap:12px; margin: 20px 0 36px; }
+  .stat { background: var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 16px; min-width:110px; }
+  .stat .n { font-size:1.4rem; font-weight:700; }
+  .stat .l { font-size:0.75rem; color: var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .card { background: var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px 24px; margin-bottom:22px; }
+  .card-head { display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .rank { font-size:0.85rem; color: var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em;}
+  .title { font-size:1.25rem; font-weight:700; margin: 2px 0 2px; }
+  .score-pill { font-weight:800; font-size:1.05rem; padding:6px 14px; border-radius:999px; background: var(--panel2); border:1px solid var(--line); white-space:nowrap; }
+  .score-hi { color: var(--accent); }
+  .score-mid { color: var(--accent2); }
+  .score-lo { color: var(--good); }
+  .badges { margin: 10px 0 14px; display:flex; flex-wrap:wrap; gap:8px; }
+  .badge { font-size:0.72rem; padding:4px 9px; border-radius:6px; background: var(--chip); color: var(--muted); border:1px solid var(--line); }
+  .badge.on { color: var(--text); }
+  .badge.danger { border-color:#5a2530; color:#ff9aa0; background:#2a141a; }
+  .badge.warn { border-color:#5a4a1f; color:#ffd27a; background:#2a2314; }
+  .badge.ok { border-color:#1f5a3a; color:#7be6ac; background:#0f2a1c; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; margin-bottom: 14px; }
+  @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+  .field label { display:block; font-size:0.72rem; color: var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px;}
+  .field div.val { font-size:0.92rem; }
+  .why { background: var(--panel2); border-left:3px solid var(--accent2); border-radius:8px; padding:12px 16px; margin: 14px 0; font-size:0.95rem; }
+  .why b { color: var(--accent2); }
+  .threat-box { border-left:3px solid var(--accent); background:#1c1216; border-radius:8px; padding:12px 16px; margin: 10px 0; font-size:0.9rem; }
+  .threat-box.none { border-left-color: var(--line); background: var(--panel2); color: var(--muted); }
+  .nist { margin-top: 16px; }
+  .nist h4 { margin: 0 0 8px; font-size:0.85rem; text-transform:uppercase; letter-spacing:.04em; color: var(--muted); }
+  .control { background:#0f1622; border:1px solid var(--line); border-radius:10px; padding:12px 16px; margin-bottom:10px; }
+  .control .cid { font-weight:700; color:#8ec4ff; }
+  .control .sim { float:right; font-size:0.75rem; color: var(--muted); }
+  .control p { margin: 6px 0 0; font-size:0.87rem; color: #cfd8e6; white-space:pre-wrap; }
+  footer { color: var(--muted); font-size:0.8rem; margin-top: 40px; border-top:1px solid var(--line); padding-top:16px; }
+  a.link { color: #8ec4ff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>TawasolPay — Top 5 Prioritised Cyber Risks</h1>
+    <p class="sub">AI-assisted risk assistant for the CISO board briefing. Ranked by internet exposure, real-world active exploitation, threat-campaign match, business criticality, and missing compensating controls — <b>not</b> CVSS alone. Remediation guidance retrieved live from the real NIST SP&nbsp;800-53 Rev&nbsp;5 control catalog.</p>
+  </header>
+
+  <div class="advisory">
+    <span class="advisory-tag">MDR Advisory — Risk level: HIGH</span>
+    <p>Three active ransomware-associated campaigns have been observed exploiting vulnerabilities present in common fintech infrastructure. At least two of these campaigns have confirmed victims in the UAE this month.</p>
+    <p class="campaigns">Named active campaigns: CrimsonJackal, RedMantis, SilentForge, IronVeil, WinterViper</p>
+  </div>
+
+  <div class="summary">
+    <div class="stat"><div class="n">60</div><div class="l">Assets</div></div>
+    <div class="stat"><div class="n">114</div><div class="l">Vulnerabilities</div></div>
+    <div class="stat"><div class="n">40</div><div class="l">Threat intel records</div></div>
+    <div class="stat"><div class="n">20</div><div class="l">Business services</div></div>
+    <div class="stat"><div class="n">4</div><div class="l">Top-5 in real CISA KEV</div></div>
+  </div>
+
+  
+  
+  
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="rank">Risk #1</div>
+        <div class="title">load-balancer-prod-01 &middot; Citrix ADC Session Token Leak (CitrixBleed)</div>
+      </div>
+      <div class="score-pill score-hi">
+        94 / 100
+      </div>
+    </div>
+
+    <div class="badges">
+      <span class="badge danger">Internet-exposed</span>
+      <span class="badge danger">In CISA KEV</span>
+      <span class="badge danger">KEV: known ransomware use</span>
+      <span class="badge danger">Active campaign match</span>
+      <span class="badge warn">No EDR</span>
+      <span class="badge ok">Patch available</span>
+      <span class="badge warn">Unauthenticated exploit</span>
+      <span class="badge">CVSS 9.4 (Critical)</span>
+    </div>
+
+    <div class="grid">
+      <div class="field"><label>Asset</label><div class="val">load-balancer-prod-01 — Load Balancer, Production, UAE (owner: Network Team)</div></div>
+      <div class="field"><label>Vulnerability</label><div class="val">Citrix ADC Session Token Leak (CitrixBleed) (CVE-2023-4966) — NetScaler ADC</div></div>
+      <div class="field"><label>Business service at risk</label><div class="val">Customer Login (owner: Chief Digital Officer)<br>Users cannot authenticate to the customer portal; all customer-facing transactions blocked</div></div>
+      <div class="field"><label>Business context</label><div class="val">Customer-facing: Yes &middot; Compliance: GDPR &middot; RTO: 1h</div></div>
+    </div>
+
+    
+      
+      <div class="threat-box">
+        <b>IronVeil / "CitrixBleed Exploitation"</b> &mdash; Active Exploitation, High confidence,
+        ransomware-associated: Yes (last seen 2026-04-20)
+        <p style="margin:6px 0 0; color:#cbb; font-size:0.85rem;">IronVeil group actively exploiting Citrix NetScaler CitrixBleed CVE-2023-4966 to harvest session tokens from load balancers protecting financial portals. Tokens used to bypass MFA.</p>
+      </div>
+      
+    
+
+    <div class="why"><b>Why it ranks here:</b> Ranked #1 (score 94/100) because the vulnerable NetScaler ADC is directly reachable from the internet; CVE-2023-4966 is confirmed in the CISA Known Exploited Vulnerabilities catalog (added 2023-10-18); threat intel (High confidence) reports active exploitation in the wild by IronVeil/&#34;CitrixBleed Exploitation&#34;.</div>
+
+    <div class="nist">
+      <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
+      
+      <div class="control">
+        <span class="sim">similarity 0.38</span>
+        <span class="cid">IA-13(3)</span> — Token Management <span style="color:var(--muted); font-size:0.78rem;">(Identification and Authentication)</span>
+        <p>In accordance with [organization-defined parameter], assertions and access tokens are:
+(a) generated;
+(b) issued;
+(c) refreshed;
+(d) revoked;
+(e) time-restricted; and
+(f) audience-restricted.</p>
+      </div>
+      
+      <div class="control">
+        <span class="sim">similarity 0.37</span>
+        <span class="cid">SC-7(10)</span> — Prevent Exfiltration <span style="color:var(--muted); font-size:0.78rem;">(System and Communications Protection)</span>
+        <p>(a) Prevent the exfiltration of information; and
+(b) Conduct exfiltration tests [frequency].</p>
+      </div>
+      
+    </div>
+  </div>
+  
+  
+  
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="rank">Risk #2</div>
+        <div class="title">load-balancer-prod-02 &middot; Citrix ADC Session Token Leak (CitrixBleed)</div>
+      </div>
+      <div class="score-pill score-hi">
+        94 / 100
+      </div>
+    </div>
+
+    <div class="badges">
+      <span class="badge danger">Internet-exposed</span>
+      <span class="badge danger">In CISA KEV</span>
+      <span class="badge danger">KEV: known ransomware use</span>
+      <span class="badge danger">Active campaign match</span>
+      <span class="badge warn">No EDR</span>
+      <span class="badge ok">Patch available</span>
+      <span class="badge warn">Unauthenticated exploit</span>
+      <span class="badge">CVSS 9.4 (Critical)</span>
+    </div>
+
+    <div class="grid">
+      <div class="field"><label>Asset</label><div class="val">load-balancer-prod-02 — Load Balancer, Production, UAE (owner: Network Team)</div></div>
+      <div class="field"><label>Vulnerability</label><div class="val">Citrix ADC Session Token Leak (CitrixBleed) (CVE-2023-4966) — NetScaler ADC</div></div>
+      <div class="field"><label>Business service at risk</label><div class="val">Payment Processing (owner: CFO)<br>Payments and fund transfers fail; PCI DSS breach obligations triggered</div></div>
+      <div class="field"><label>Business context</label><div class="val">Customer-facing: Yes &middot; Compliance: PCI DSS &middot; RTO: 1h</div></div>
+    </div>
+
+    
+      
+      <div class="threat-box">
+        <b>IronVeil / "CitrixBleed Exploitation"</b> &mdash; Active Exploitation, High confidence,
+        ransomware-associated: Yes (last seen 2026-04-20)
+        <p style="margin:6px 0 0; color:#cbb; font-size:0.85rem;">IronVeil group actively exploiting Citrix NetScaler CitrixBleed CVE-2023-4966 to harvest session tokens from load balancers protecting financial portals. Tokens used to bypass MFA.</p>
+      </div>
+      
+    
+
+    <div class="why"><b>Why it ranks here:</b> Ranked #2 (score 94/100) because the vulnerable NetScaler ADC is directly reachable from the internet; CVE-2023-4966 is confirmed in the CISA Known Exploited Vulnerabilities catalog (added 2023-10-18); threat intel (High confidence) reports active exploitation in the wild by IronVeil/&#34;CitrixBleed Exploitation&#34;.</div>
+
+    <div class="nist">
+      <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
+      
+      <div class="control">
+        <span class="sim">similarity 0.38</span>
+        <span class="cid">IA-13(3)</span> — Token Management <span style="color:var(--muted); font-size:0.78rem;">(Identification and Authentication)</span>
+        <p>In accordance with [organization-defined parameter], assertions and access tokens are:
+(a) generated;
+(b) issued;
+(c) refreshed;
+(d) revoked;
+(e) time-restricted; and
+(f) audience-restricted.</p>
+      </div>
+      
+      <div class="control">
+        <span class="sim">similarity 0.37</span>
+        <span class="cid">SC-7(10)</span> — Prevent Exfiltration <span style="color:var(--muted); font-size:0.78rem;">(System and Communications Protection)</span>
+        <p>(a) Prevent the exfiltration of information; and
+(b) Conduct exfiltration tests [frequency].</p>
+      </div>
+      
+    </div>
+  </div>
+  
+  
+  
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="rank">Risk #3</div>
+        <div class="title">vpn-edge-01 &middot; Fortinet SSL-VPN Heap Buffer Overflow RCE</div>
+      </div>
+      <div class="score-pill score-hi">
+        94 / 100
+      </div>
+    </div>
+
+    <div class="badges">
+      <span class="badge danger">Internet-exposed</span>
+      <span class="badge danger">In CISA KEV</span>
+      <span class="badge danger">KEV: known ransomware use</span>
+      <span class="badge danger">Active campaign match</span>
+      <span class="badge warn">No EDR</span>
+      <span class="badge ok">Patch available</span>
+      <span class="badge warn">Unauthenticated exploit</span>
+      <span class="badge">CVSS 9.8 (Critical)</span>
+    </div>
+
+    <div class="grid">
+      <div class="field"><label>Asset</label><div class="val">vpn-edge-01 — VPN Gateway, Production, UAE (owner: Network Team)</div></div>
+      <div class="field"><label>Vulnerability</label><div class="val">Fortinet SSL-VPN Heap Buffer Overflow RCE (CVE-2024-21762) — VPN Firmware</div></div>
+      <div class="field"><label>Business service at risk</label><div class="val">Remote Access (owner: CIO)<br>Remote employees and administrators lose secure network access</div></div>
+      <div class="field"><label>Business context</label><div class="val">Customer-facing: No &middot; Compliance: ISO 27001 &middot; RTO: 2h</div></div>
+    </div>
+
+    
+      
+      <div class="threat-box">
+        <b>CrimsonJackal / "Gateway Breaker"</b> &mdash; Weaponized, High confidence,
+        ransomware-associated: Yes (last seen 2026-04-22)
+        <p style="margin:6px 0 0; color:#cbb; font-size:0.85rem;">Active exploitation of Fortinet SSL-VPN CVE-2024-21762 observed against financial services and fintech firms in the Gulf region. Initial access leads to internal lateral movement and ransomware staging.</p>
+      </div>
+      
+    
+
+    <div class="why"><b>Why it ranks here:</b> Ranked #3 (score 94/100) because the vulnerable VPN Firmware is directly reachable from the internet; CVE-2024-21762 is confirmed in the CISA Known Exploited Vulnerabilities catalog (added 2024-02-09); threat intel (High confidence) reports weaponized exploit code in active use by CrimsonJackal/&#34;Gateway Breaker&#34;.</div>
+
+    <div class="nist">
+      <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
+      
+      <div class="control">
+        <span class="sim">similarity 0.38</span>
+        <span class="cid">RA-5(10)</span> — Correlate Scanning Information <span style="color:var(--muted); font-size:0.78rem;">(Risk Assessment)</span>
+        <p>Correlate the output from vulnerability scanning tools to determine the presence of multi-vulnerability and multi-hop attack vectors.</p>
+      </div>
+      
+      <div class="control">
+        <span class="sim">similarity 0.38</span>
+        <span class="cid">SA-15(5)</span> — Attack Surface Reduction <span style="color:var(--muted); font-size:0.78rem;">(System and Services Acquisition)</span>
+        <p>Require the developer of the system, system component, or system service to reduce attack surfaces to [thresholds].</p>
+      </div>
+      
+    </div>
+  </div>
+  
+  
+  
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="rank">Risk #4</div>
+        <div class="title">vpn-edge-02 &middot; Fortinet SSL-VPN Heap Buffer Overflow RCE</div>
+      </div>
+      <div class="score-pill score-hi">
+        94 / 100
+      </div>
+    </div>
+
+    <div class="badges">
+      <span class="badge danger">Internet-exposed</span>
+      <span class="badge danger">In CISA KEV</span>
+      <span class="badge danger">KEV: known ransomware use</span>
+      <span class="badge danger">Active campaign match</span>
+      <span class="badge warn">No EDR</span>
+      <span class="badge ok">Patch available</span>
+      <span class="badge warn">Unauthenticated exploit</span>
+      <span class="badge">CVSS 9.8 (Critical)</span>
+    </div>
+
+    <div class="grid">
+      <div class="field"><label>Asset</label><div class="val">vpn-edge-02 — VPN Gateway, Production, UAE (owner: Network Team)</div></div>
+      <div class="field"><label>Vulnerability</label><div class="val">Fortinet SSL-VPN Heap Buffer Overflow RCE (CVE-2024-21762) — VPN Firmware</div></div>
+      <div class="field"><label>Business service at risk</label><div class="val">Remote Access (owner: CIO)<br>Remote employees and administrators lose secure network access</div></div>
+      <div class="field"><label>Business context</label><div class="val">Customer-facing: No &middot; Compliance: ISO 27001 &middot; RTO: 2h</div></div>
+    </div>
+
+    
+      
+      <div class="threat-box">
+        <b>CrimsonJackal / "Gateway Breaker"</b> &mdash; Weaponized, High confidence,
+        ransomware-associated: Yes (last seen 2026-04-22)
+        <p style="margin:6px 0 0; color:#cbb; font-size:0.85rem;">Active exploitation of Fortinet SSL-VPN CVE-2024-21762 observed against financial services and fintech firms in the Gulf region. Initial access leads to internal lateral movement and ransomware staging.</p>
+      </div>
+      
+    
+
+    <div class="why"><b>Why it ranks here:</b> Ranked #4 (score 94/100) because the vulnerable VPN Firmware is directly reachable from the internet; CVE-2024-21762 is confirmed in the CISA Known Exploited Vulnerabilities catalog (added 2024-02-09); threat intel (High confidence) reports weaponized exploit code in active use by CrimsonJackal/&#34;Gateway Breaker&#34;.</div>
+
+    <div class="nist">
+      <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
+      
+      <div class="control">
+        <span class="sim">similarity 0.38</span>
+        <span class="cid">RA-5(10)</span> — Correlate Scanning Information <span style="color:var(--muted); font-size:0.78rem;">(Risk Assessment)</span>
+        <p>Correlate the output from vulnerability scanning tools to determine the presence of multi-vulnerability and multi-hop attack vectors.</p>
+      </div>
+      
+      <div class="control">
+        <span class="sim">similarity 0.38</span>
+        <span class="cid">SA-15(5)</span> — Attack Surface Reduction <span style="color:var(--muted); font-size:0.78rem;">(System and Services Acquisition)</span>
+        <p>Require the developer of the system, system component, or system service to reduce attack surfaces to [thresholds].</p>
+      </div>
+      
+    </div>
+  </div>
+  
+  
+  
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="rank">Risk #5</div>
+        <div class="title">payment-api-prod-01 &middot; Payment API Insecure Direct Object Reference</div>
+      </div>
+      <div class="score-pill score-hi">
+        90 / 100
+      </div>
+    </div>
+
+    <div class="badges">
+      <span class="badge danger">Internet-exposed</span>
+      <span class="badge ">Not in KEV</span>
+      
+      <span class="badge danger">Active campaign match</span>
+      <span class="badge ok">EDR installed</span>
+      <span class="badge ok">Patch available</span>
+      <span class="badge warn">Unauthenticated exploit</span>
+      <span class="badge">CVSS 9.1 (Critical)</span>
+    </div>
+
+    <div class="grid">
+      <div class="field"><label>Asset</label><div class="val">payment-api-prod-01 — API Server, Production, UAE (owner: Payments Team)</div></div>
+      <div class="field"><label>Vulnerability</label><div class="val">Payment API Insecure Direct Object Reference (CVE-SYN-2026-0010) — Payment Handler</div></div>
+      <div class="field"><label>Business service at risk</label><div class="val">Payment Processing (owner: CFO)<br>Payments and fund transfers fail; PCI DSS breach obligations triggered</div></div>
+      <div class="field"><label>Business context</label><div class="val">Customer-facing: Yes &middot; Compliance: PCI DSS &middot; RTO: 1h</div></div>
+    </div>
+
+    
+      
+      <div class="threat-box">
+        <b>IronVeil / "CitrixBleed Exploitation"</b> &mdash; Active Exploitation, High confidence,
+        ransomware-associated: Yes (last seen 2026-04-20)
+        <p style="margin:6px 0 0; color:#cbb; font-size:0.85rem;">IronVeil also targeting payment API IDOR vulnerabilities in tandem with CitrixBleed to escalate access post-session-hijack.</p>
+      </div>
+      
+    
+
+    <div class="why"><b>Why it ranks here:</b> Ranked #5 (score 90/100) because the vulnerable Payment Handler is directly reachable from the internet; threat intel (High confidence) reports active exploitation in the wild by IronVeil/&#34;CitrixBleed Exploitation&#34;; &#34;CitrixBleed Exploitation&#34; (IronVeil) is a ransomware-associated campaign actively matching this CVE.</div>
+
+    <div class="nist">
+      <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
+      
+      <div class="control">
+        <span class="sim">similarity 0.38</span>
+        <span class="cid">IR-6(2)</span> — Vulnerabilities Related to Incidents <span style="color:var(--muted); font-size:0.78rem;">(Incident Response)</span>
+        <p>Report system vulnerabilities associated with reported incidents to [personnel or roles].</p>
+      </div>
+      
+      <div class="control">
+        <span class="sim">similarity 0.37</span>
+        <span class="cid">AC-25</span> — Reference Monitor <span style="color:var(--muted); font-size:0.78rem;">(Access Control)</span>
+        <p>Implement a reference monitor for [access control policies] that is tamperproof, always invoked, and small enough to be subject to analysis and testing, the completeness of which can be assured.</p>
+      </div>
+      
+    </div>
+  </div>
+  
+
+  <footer>
+    Data: internal asset/vuln/threat-intel/business-service CSVs (structured, joined via SQL) +
+    live cross-reference against the real <a class="link" href="https://github.com/cisagov/kev-data" target="_blank">CISA KEV catalog</a> +
+    retrieval-augmented lookup over the real <a class="link" href="https://github.com/usnistgov/oscal-content" target="_blank">NIST SP 800-53 Rev 5</a> control catalog.
+    Markdown version: <a class="link" href="/report.md">/report.md</a> &middot; JSON: <a class="link" href="/api/top5">/api/top5</a>
+  </footer>
+</div>
+</body>
+</html>
