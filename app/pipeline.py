@@ -3,6 +3,7 @@ Wires the whole system together: ingest -> enrich -> score -> rank ->
 retrieve NIST guidance -> generate explanation -> assemble the final
 human-readable top-N risk report.
 """
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 from app import config
@@ -36,21 +37,24 @@ def build_top_risk_report(top_n: int = config.TOP_N_RISKS) -> list[RiskReportEnt
     ranked = rank_risks(risks, top_n=top_n, one_per_asset=True)
     retriever = get_retriever()
 
-    entries = []
-    for i, (risk, score) in enumerate(ranked, start=1):
-        query = build_query_for_risk(risk)
-        controls = retriever.query(query, k=2)
-        narrative = explain_risk(i, risk, score)
-        entries.append(
-            RiskReportEntry(
-                rank=i,
-                risk=risk,
-                score=score,
-                why_it_ranks_here=narrative,
-                nist_controls=controls,
-            )
+    # Retrieval is local (ChromaDB, ~10ms) so it stays sequential. The
+    # explanation step is a network call to Groq (~1s each) and each risk's
+    # call is independent of the others, so those run concurrently -- for
+    # top_n=5 this turns ~5x1s of serial network waiting into ~1s total.
+    ranks = list(range(1, len(ranked) + 1))
+    risks_ranked = [risk for risk, _ in ranked]
+    scores_ranked = [score for _, score in ranked]
+    controls_per_risk = [retriever.query(build_query_for_risk(risk), k=2) for risk in risks_ranked]
+
+    with ThreadPoolExecutor(max_workers=max(len(ranked), 1)) as pool:
+        narratives = list(pool.map(explain_risk, ranks, risks_ranked, scores_ranked, controls_per_risk))
+
+    return [
+        RiskReportEntry(rank=rank, risk=risk, score=score, why_it_ranks_here=narrative, nist_controls=controls)
+        for rank, risk, score, controls, narrative in zip(
+            ranks, risks_ranked, scores_ranked, controls_per_risk, narratives
         )
-    return entries
+    ]
 
 
 if __name__ == "__main__":

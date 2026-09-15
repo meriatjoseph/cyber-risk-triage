@@ -6,3 +6,4 @@ __pycache__/
 output/
 data/nist_800_53_catalog_raw.json
 .pytest_cache/
+.env
