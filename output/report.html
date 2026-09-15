@@ -117,13 +117,13 @@
       
     
 
-    <div class="why"><b>Why it ranks here:</b> The Citrix ADC Session Token Leak (CVE‑2023‑4966) on the internet‑exposed load‑balancer‑prod‑01 is ranked highest because it is a zero‑auth, publicly reachable vulnerability confirmed in the CISA Known Exploited Vulnerabilities catalog, actively exploited by the ransomware‑associated IronVeil “CitrixBleed Exploitation” campaign, threatens the high‑criticality, customer‑facing login service with a 1‑hour RTO, is in scope for GDPR, and lacks any EDR protection, making IA‑13(3) – Token Management the appropriate NIST control to mitigate the risk.</div>
+    <div class="why"><b>Why it ranks here:</b> The Citrix ADC Session Token Leak (CVE‑2023‑4966) is ranked highest because it is publicly reachable, actively exploited by a ransomware‑associated campaign, exposes a customer‑facing login with a 1‑hour RTO, is in scope for GDPR, and the asset lacks EDR, making IA‑13(3) – Token Management the required NIST control.</div>
 
     <div class="nist">
       <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
       
       <div class="control">
-        <span class="sim">similarity 0.38</span>
+        <span class="sim">similarity 0.40</span>
         <span class="cid">IA-13(3)</span> — Token Management <span style="color:var(--muted); font-size:0.78rem;">(Identification and Authentication)</span>
         <p>In accordance with [organization-defined parameter], assertions and access tokens are:
 (a) generated;
@@ -136,9 +136,8 @@
       
       <div class="control">
         <span class="sim">similarity 0.37</span>
-        <span class="cid">SC-7(10)</span> — Prevent Exfiltration <span style="color:var(--muted); font-size:0.78rem;">(System and Communications Protection)</span>
-        <p>(a) Prevent the exfiltration of information; and
-(b) Conduct exfiltration tests [frequency].</p>
+        <span class="cid">SA-11(6)</span> — Attack Surface Reviews <span style="color:var(--muted); font-size:0.78rem;">(System and Services Acquisition)</span>
+        <p>Require the developer of the system, system component, or system service to perform attack surface reviews.</p>
       </div>
       
     </div>
@@ -185,13 +184,13 @@
       
     
 
-    <div class="why"><b>Why it ranks here:</b> The Citrix ADC Session Token Leak (CVE‑2023‑4966) on the internet‑exposed load‑balancer‑prod‑02 is ranked highest because it is a zero‑auth, publicly reachable vulnerability confirmed in the CISA KEV, actively exploited by the ransomware‑associated IronVeil “CitrixBleed Exploitation” campaign, threatens the high‑criticality, customer‑facing Payment Processing service with a 1‑hour RTO, is in‑scope for PCI DSS, and the asset lacks EDR, making IA‑13(3) – Token Management the required NIST control.</div>
+    <div class="why"><b>Why it ranks here:</b> The Citrix ADC Session Token Leak (CVE‑2023‑4966) on load‑balancer‑prod‑02 is ranked highest because it is internet‑exposed, exploitable without authentication, confirmed in the CISA KEV, actively exploited by the ransomware‑associated IronVeil “CitrixBleed Exploitation” campaign, and threatens the high‑criticality, customer‑facing Payment Processing service with a 1‑hour RTO and PCI DSS scope, so the recommended NIST control is IA‑13(3) – Token Management.</div>
 
     <div class="nist">
       <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
       
       <div class="control">
-        <span class="sim">similarity 0.38</span>
+        <span class="sim">similarity 0.40</span>
         <span class="cid">IA-13(3)</span> — Token Management <span style="color:var(--muted); font-size:0.78rem;">(Identification and Authentication)</span>
         <p>In accordance with [organization-defined parameter], assertions and access tokens are:
 (a) generated;
@@ -204,9 +203,8 @@
       
       <div class="control">
         <span class="sim">similarity 0.37</span>
-        <span class="cid">SC-7(10)</span> — Prevent Exfiltration <span style="color:var(--muted); font-size:0.78rem;">(System and Communications Protection)</span>
-        <p>(a) Prevent the exfiltration of information; and
-(b) Conduct exfiltration tests [frequency].</p>
+        <span class="cid">SA-11(6)</span> — Attack Surface Reviews <span style="color:var(--muted); font-size:0.78rem;">(System and Services Acquisition)</span>
+        <p>Require the developer of the system, system component, or system service to perform attack surface reviews.</p>
       </div>
       
     </div>
@@ -253,21 +251,21 @@
       
     
 
-    <div class="why"><b>Why it ranks here:</b> The finding ranks highest because the publicly exposed VPN gateway is critical for remote access, the CVE‑2024‑21762 vulnerability is confirmed as a known exploited vulnerability with weaponized ransomware code actively used by CrimsonJackal, it can be exploited without authentication, the asset has no EDR and a 2‑hour RTO leaves no downtime tolerance, and the recommended NIST control RA‑5(10) – Correlate Scanning Information – is essential to detect and mitigate such active exploitation.</div>
+    <div class="why"><b>Why it ranks here:</b> The VPN gateway’s publicly reachable firmware, the confirmed CVE‑2024‑21762 with weaponized exploit code actively used by the ransomware‑associated CrimsonJackal “Gateway Breaker” campaign, its critical business service impact, zero authentication requirement, and the asset’s criticality with a 2‑hour RTO make this finding a top‑priority risk, so it is mitigated by implementing NIST SP 800‑53 control SA‑15(5) – Attack Surface Reduction.</div>
 
     <div class="nist">
       <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
       
       <div class="control">
-        <span class="sim">similarity 0.38</span>
-        <span class="cid">RA-5(10)</span> — Correlate Scanning Information <span style="color:var(--muted); font-size:0.78rem;">(Risk Assessment)</span>
-        <p>Correlate the output from vulnerability scanning tools to determine the presence of multi-vulnerability and multi-hop attack vectors.</p>
+        <span class="sim">similarity 0.40</span>
+        <span class="cid">SA-15(5)</span> — Attack Surface Reduction <span style="color:var(--muted); font-size:0.78rem;">(System and Services Acquisition)</span>
+        <p>Require the developer of the system, system component, or system service to reduce attack surfaces to [thresholds].</p>
       </div>
       
       <div class="control">
-        <span class="sim">similarity 0.38</span>
-        <span class="cid">SA-15(5)</span> — Attack Surface Reduction <span style="color:var(--muted); font-size:0.78rem;">(System and Services Acquisition)</span>
-        <p>Require the developer of the system, system component, or system service to reduce attack surfaces to [thresholds].</p>
+        <span class="sim">similarity 0.40</span>
+        <span class="cid">RA-5(10)</span> — Correlate Scanning Information <span style="color:var(--muted); font-size:0.78rem;">(Risk Assessment)</span>
+        <p>Correlate the output from vulnerability scanning tools to determine the presence of multi-vulnerability and multi-hop attack vectors.</p>
       </div>
       
     </div>
@@ -314,21 +312,21 @@
       
     
 
-    <div class="why"><b>Why it ranks here:</b> The finding ranks highest because the publicly exposed VPN gateway is critical for remote access, the CVE‑2024‑21762 vulnerability is confirmed in the CISA Known Exploited Vulnerabilities catalog, weaponized exploit code is actively used by the ransomware‑associated CrimsonJackal “Gateway Breaker” campaign, the asset lacks any EDR protection, and a 2‑hour RTO leaves virtually no downtime tolerance, so the risk is mitigated by correlating scanning information per NIST SP 800‑53 control RA‑5(10).</div>
+    <div class="why"><b>Why it ranks here:</b> The VPN gateway’s publicly exposed firmware, the CVE‑2024‑21762 heap overflow confirmed in CISA’s Known Exploited Vulnerabilities catalog and actively weaponized by the ransomware‑associated CrimsonJackal “Gateway Breaker” campaign, combined with the asset’s critical remote‑access role, 2‑hour RTO, lack of EDR, and the fact that the flaw is exploitable without authentication, places this finding at the top of the priority list and warrants implementing NIST SP 800‑53 control SA‑15(5) – Attack Surface Reduction.</div>
 
     <div class="nist">
       <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
       
       <div class="control">
-        <span class="sim">similarity 0.38</span>
-        <span class="cid">RA-5(10)</span> — Correlate Scanning Information <span style="color:var(--muted); font-size:0.78rem;">(Risk Assessment)</span>
-        <p>Correlate the output from vulnerability scanning tools to determine the presence of multi-vulnerability and multi-hop attack vectors.</p>
+        <span class="sim">similarity 0.40</span>
+        <span class="cid">SA-15(5)</span> — Attack Surface Reduction <span style="color:var(--muted); font-size:0.78rem;">(System and Services Acquisition)</span>
+        <p>Require the developer of the system, system component, or system service to reduce attack surfaces to [thresholds].</p>
       </div>
       
       <div class="control">
-        <span class="sim">similarity 0.38</span>
-        <span class="cid">SA-15(5)</span> — Attack Surface Reduction <span style="color:var(--muted); font-size:0.78rem;">(System and Services Acquisition)</span>
-        <p>Require the developer of the system, system component, or system service to reduce attack surfaces to [thresholds].</p>
+        <span class="sim">similarity 0.40</span>
+        <span class="cid">RA-5(10)</span> — Correlate Scanning Information <span style="color:var(--muted); font-size:0.78rem;">(Risk Assessment)</span>
+        <p>Correlate the output from vulnerability scanning tools to determine the presence of multi-vulnerability and multi-hop attack vectors.</p>
       </div>
       
     </div>
@@ -375,7 +373,7 @@
       
     
 
-    <div class="why"><b>Why it ranks here:</b> The payment‑API‑prod‑01 server is ranked highest because its publicly reachable Payment Handler is vulnerable to CVE‑SYN‑2026‑0010, which is actively exploited by the ransomware‑associated IronVeil “CitrixBleed Exploitation” campaign, the asset is critical and customer‑facing with a 1‑hour RTO, it is in‑scope for PCI DSS, and the vulnerability can be exploited without authentication, making the incident response control IR‑6(2) – Vulnerabilities Related to Incidents – essential for rapid detection and containment.</div>
+    <div class="why"><b>Why it ranks here:</b> The payment‑API‑prod‑01 server is ranked highest because its publicly reachable Payment Handler is vulnerable to CVE‑SYN‑2026‑0010, which is actively exploited by the ransomware‑associated IronVeil “CitrixBleed Exploitation” campaign, the asset is critical for a customer‑facing payment processing service with a 1‑hour RTO, and it is in‑scope for PCI DSS, so the incident response control IR‑6(2) – Vulnerabilities Related to Incidents – is the recommended NIST control.</div>
 
     <div class="nist">
       <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
@@ -388,8 +386,8 @@
       
       <div class="control">
         <span class="sim">similarity 0.37</span>
-        <span class="cid">AC-25</span> — Reference Monitor <span style="color:var(--muted); font-size:0.78rem;">(Access Control)</span>
-        <p>Implement a reference monitor for [access control policies] that is tamperproof, always invoked, and small enough to be subject to analysis and testing, the completeness of which can be assured.</p>
+        <span class="cid">SC-7(25)</span> — Unclassified National Security System Connections <span style="color:var(--muted); font-size:0.78rem;">(System and Communications Protection)</span>
+        <p>Prohibit the direct connection of [unclassified national security system] to an external network without the use of [boundary protection device].</p>
       </div>
       
     </div>

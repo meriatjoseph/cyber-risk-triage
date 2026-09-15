@@ -190,8 +190,21 @@ def build_query_for_risk(risk) -> str:
     missing-control signals only -- NOT from remediation_guidance.csv, which
     the assignment spec treats as a hint about expected vocabulary, not a
     lookup source.
+
+    vulnerability_name/affected_component are repeated: they're the only
+    part of this query that differs risk-to-risk in practice, since a top-5
+    list mostly shares the same exposure/EDR/auth/ransomware flags (that's
+    part of why those risks rank top-5). Under semantic embeddings that
+    repetition is a no-op, but the TF-IDF fallback backend (EMBEDDER_BACKEND
+    =tfidf, used in the Docker deploy -- see app/rag.py module docstring)
+    is a literal-token method: without the repeat, the shared boilerplate
+    phrases below dominated cosine similarity and every risk collapsed onto
+    the same one or two NIST controls regardless of vulnerability type.
     """
-    parts = [risk.vulnerability_name, f"affected component: {risk.affected_component}"]
+    parts = [
+        f"{risk.vulnerability_name}. {risk.vulnerability_name}. "
+        f"affected component: {risk.affected_component}. {risk.affected_component}"
+    ]
     if not risk.patch_available:
         parts.append("no vendor patch available, unsupported or unpatched component")
     if not risk.edr_installed:
@@ -201,7 +214,7 @@ def build_query_for_risk(risk) -> str:
     if risk.asset_exposure == "Internet":
         parts.append("internet-facing system exposure")
     if risk.any_ransomware_signal:
-        parts.append("active exploitation, incident response and flaw remediation needed")
+        parts.append("actively exploited by threat campaign, remediation required")
     return ". ".join(parts)
 
 
