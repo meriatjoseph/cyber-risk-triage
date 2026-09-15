@@ -1,5 +1,9 @@
 # TawasolPay - AI-Powered Cyber Risk Assistant
 
+**Live demo:** https://tawasolpay-risk-assistant-w3jd.onrender.com
+(free-tier hosting, spins down after ~15 min idle - first request after
+that can take 30-60s to wake up)
+
 Takes TawasolPay's asset list, vulnerability list, threat intel, and business
 context, and turns it into one thing: the top 5 risks to deal with first,
 in plain English, each with a fix recommendation pulled from the real NIST
