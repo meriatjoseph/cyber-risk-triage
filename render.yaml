@@ -7,4 +7,6 @@ services:
     envVars:
       - key: PORT
         value: 8000
+      - key: GROQ_API_KEY
+        sync: false
     healthCheckPath: /health
