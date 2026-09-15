@@ -18,6 +18,7 @@ Vector store: ChromaDB, persisted to .chroma/ so the index survives restarts
 and doesn't need re-embedding on every deploy.
 """
 import json
+import os
 from dataclasses import dataclass
 
 from app import config
@@ -103,11 +104,21 @@ class NistControlRetriever:
         texts = [c["text"] for c in self.chunks]
         ids = [c["control_id"] for c in self.chunks]
 
-        try:
-            embedder = SentenceTransformerEmbedder()
-        except Exception as e:  # noqa: BLE001 - deliberate broad fallback
-            print(f"[rag] sentence-transformers unavailable ({e}); falling back to TF-IDF+SVD")
+        # torch + sentence-transformers add ~450MB of RSS just from being
+        # imported, before any model or index exists -- fine locally, but
+        # over the 512MB ceiling on Render's free tier. EMBEDDER_BACKEND=tfidf
+        # (set in the Dockerfile) skips importing them entirely rather than
+        # loading and discarding them, so the deployed container never pays
+        # that cost. Local runs are unaffected and keep the full model.
+        if os.environ.get("EMBEDDER_BACKEND") == "tfidf":
+            print("[rag] EMBEDDER_BACKEND=tfidf set; using TF-IDF+SVD to stay within memory limits")
             embedder = TfidfSvdEmbedder(texts)
+        else:
+            try:
+                embedder = SentenceTransformerEmbedder()
+            except Exception as e:  # noqa: BLE001 - deliberate broad fallback
+                print(f"[rag] sentence-transformers unavailable ({e}); falling back to TF-IDF+SVD")
+                embedder = TfidfSvdEmbedder(texts)
         self._embedder = embedder
         self._backend = embedder.backend_name
 

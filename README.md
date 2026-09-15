@@ -78,6 +78,14 @@ docker run -p 8000:8000 tawasolpay-risk-assistant
 KEV, NIST, and the search index are all built at image build time, so the
 container's ready to serve as soon as it starts.
 
+The image forces `EMBEDDER_BACKEND=tfidf`, so it uses the TF-IDF+SVD
+fallback embedder instead of sentence-transformers. Reason: importing torch
++ sentence-transformers costs ~450MB RSS on its own, measured directly, and
+that alone blows past the 512MB cap on Render's free tier. TF-IDF matches
+are cruder than real semantic embeddings - still relevant, just less
+precise - but the app stays up. Outside Docker, local runs use the full
+sentence-transformers model by default.
+
 ### About the LLM
 
 The "why this ranks here" sentence is the one spot a generative model
