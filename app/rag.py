@@ -19,6 +19,7 @@ and doesn't need re-embedding on every deploy.
 """
 import json
 import os
+import re
 from dataclasses import dataclass
 
 from app import config
@@ -181,6 +182,126 @@ class NistControlRetriever:
                 )
             )
         return out
+
+    def query_for_risk(self, risk, k: int = 2) -> list[RetrievedControl]:
+        """Retrieves NIST controls for one risk.
+
+        Runs the base finding-level query (build_query_for_risk), and --
+        for a recognised vulnerability class (buffer overflow, injection,
+        broken access control, missing patch, ...) -- a second query
+        phrased in that class's own control vocabulary (see
+        _VULN_CLASS_HINTS), then merges both result sets by similarity.
+
+        Why two queries instead of one: a single blended query mixes
+        distinct concerns into one mean-pooled vector -- e.g. "Fortinet
+        SSL-VPN Heap Buffer Overflow RCE" embeds closer to remote-access/
+        networking controls than to the memory-corruption control that
+        actually applies, because "VPN" dominates the sentence. Querying
+        the vulnerability class on its own, in parallel with the literal
+        finding text, and merging by similarity keeps each concern legible
+        to the embedding instead of averaging them into a control that
+        matches neither well. The real NIST corpus still decides what
+        comes back for either query -- this only changes how the question
+        is asked, not the answer.
+        """
+        candidates: dict[str, RetrievedControl] = {}
+
+        def add_all(results: list[RetrievedControl]) -> None:
+            for c in results:
+                existing = candidates.get(c.control_id)
+                if existing is None or c.similarity > existing.similarity:
+                    candidates[c.control_id] = c
+
+        add_all(self.query(build_query_for_risk(risk), k=k))
+        hint = _class_hint_query(risk)
+        if hint:
+            add_all(self.query(hint, k=k))
+
+        return sorted(candidates.values(), key=lambda c: -c.similarity)[:k]
+
+
+# Query expansion for _query_for_risk: vulnerability names that name a
+# specific weakness class read, semantically, as much about the *carrier*
+# (VPN, API, database) as about the *weakness* (buffer overflow, broken
+# access control). Each hint below is a short restatement of that weakness
+# class in NIST's own control-statement vocabulary (not naming a specific
+# control ID), used as a second, focused retrieval query -- see
+# NistControlRetriever.query_for_risk.
+_VULN_CLASS_HINTS: list[tuple[re.Pattern, str]] = [
+    (
+        re.compile(r"buffer overflow|heap overflow|memory corruption", re.I),
+        "protect system memory from unauthorized or malicious code execution, "
+        "memory protection against buffer overflow attacks",
+    ),
+    (
+        re.compile(
+            r"\brce\b|remote code execution|deserialization|template injection|"
+            r"ognl injection|argument injection|sql injection|file upload to rce",
+            re.I,
+        ),
+        "check the validity and syntax of information inputs to prevent injection "
+        "and remote code execution attacks",
+    ),
+    (
+        re.compile(
+            r"insecure direct object reference|\bidor\b|broken access control|"
+            r"excessive .*(permission|privilege)s?|privilege escalation",
+            re.I,
+        ),
+        "enforce approved authorizations for logical access to information and "
+        "system resources, employ the principle of least privilege",
+    ),
+    (
+        re.compile(
+            r"authentication bypass|hardcoded credential|weak .*password|"
+            r"ntlm hash|session fixation",
+            re.I,
+        ),
+        "uniquely identify and authenticate users and devices before allowing "
+        "access, manage authenticators and credentials",
+    ),
+    (
+        re.compile(
+            r"end of life|end of support|unsupported .*(component|version)|"
+            r"outdated .*(version|runtime|firmware)|missing patch|"
+            r"critical vendor advisory",
+            re.I,
+        ),
+        "identify, report, and correct system flaws, install security-relevant "
+        "software and firmware updates, replace unsupported system components",
+    ),
+    (
+        re.compile(r"no edr|missing edr|edr agent", re.I),
+        "implement malicious code protection and endpoint detection mechanisms "
+        "at system entry and exit points",
+    ),
+    (
+        re.compile(r"denial of service|\bdos\b", re.I),
+        "provide denial-of-service protection for the system",
+    ),
+    (
+        re.compile(
+            r"unencrypted|missing encryption|encryption at rest|"
+            r"encryption not enforced|backup encryption",
+            re.I,
+        ),
+        "protect the confidentiality of information at rest and in transit "
+        "through cryptographic mechanisms",
+    ),
+    (
+        re.compile(r"cross-site scripting|\bxss\b", re.I),
+        "check the validity of information inputs to prevent injection of "
+        "malicious script content",
+    ),
+]
+
+
+def _class_hint_query(risk) -> str | None:
+    haystack = f"{risk.vulnerability_name} {risk.affected_component or ''}"
+    for pattern, hint in _VULN_CLASS_HINTS:
+        if pattern.search(haystack):
+            return hint
+    return None
 
 
 def build_query_for_risk(risk) -> str:

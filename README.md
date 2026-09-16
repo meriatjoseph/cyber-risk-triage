@@ -25,7 +25,15 @@ checks this holds.
   threat intel, and checks each vuln against KEV.
 - `app/scoring.py` - the actual scoring. Plain arithmetic, no black box.
 - `app/rag.py` - embeds the NIST 800-53 controls, searches them with
-  ChromaDB for the best match per risk.
+  ChromaDB for the best match per risk. For a recognised vulnerability class
+  (buffer overflow, broken access control, missing patch, ...) it runs a
+  second query phrased in that class's own control vocabulary and merges it
+  with the literal finding-text query by similarity - a blended query like
+  "Fortinet SSL-VPN Heap Buffer Overflow RCE" otherwise embeds closer to
+  remote-access controls than to the memory-corruption control that
+  actually applies, because "VPN" dominates the sentence. Both queries still
+  hit the same live NIST index; this only changes how the question is
+  asked, not the answer.
 - `app/explain.py` - writes the "why this ranks here" sentence.
 - `app/threat_report.py` - pulls the risk level and campaign names out of
   the MDR advisory for the summary banner.

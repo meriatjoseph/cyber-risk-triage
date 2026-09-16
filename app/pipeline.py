@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from app import config
 from app.enrichment import EnrichedRisk, build_enriched_risks
 from app.explain import explain_risk
-from app.rag import NistControlRetriever, RetrievedControl, build_query_for_risk
+from app.rag import NistControlRetriever, RetrievedControl
 from app.scoring import ScoreBreakdown, rank_risks
 
 
@@ -44,7 +44,7 @@ def build_top_risk_report(top_n: int = config.TOP_N_RISKS) -> list[RiskReportEnt
     ranks = list(range(1, len(ranked) + 1))
     risks_ranked = [risk for risk, _ in ranked]
     scores_ranked = [score for _, score in ranked]
-    controls_per_risk = [retriever.query(build_query_for_risk(risk), k=2) for risk in risks_ranked]
+    controls_per_risk = [retriever.query_for_risk(risk, k=2) for risk in risks_ranked]
 
     with ThreadPoolExecutor(max_workers=max(len(ranked), 1)) as pool:
         narratives = list(pool.map(explain_risk, ranks, risks_ranked, scores_ranked, controls_per_risk))
