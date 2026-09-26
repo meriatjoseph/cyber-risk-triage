@@ -37,6 +37,12 @@ checks this holds.
   actually applies, because "VPN" dominates the sentence. Both queries still
   hit the same live NIST index; this only changes how the question is
   asked, not the answer.
+  The embedding model only reads 256 tokens, and 176 of the 1,014 controls
+  are longer, so their tails (mostly Discussion text) used to be silently
+  cut off. Long controls are now split into passages that each fit (1,243
+  in total, each starting with the control's ID and title), and a control
+  is scored by its best passage. The index is rebuilt whenever a hash of
+  those passages changes, not just when the count does.
 - `app/explain.py` - writes the "why this ranks here" sentence.
 - `app/threat_report.py` - pulls the risk level and campaign names out of
   the MDR advisory for the summary banner.

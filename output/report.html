@@ -137,7 +137,7 @@
       
     
 
-    <div class="why"><b>Why it ranks here:</b> This finding ranks highest because the publicly reachable Citrix ADC is vulnerable to a known, actively exploited session‑token leak (CVE‑2023‑4966) that can be abused without authentication to compromise the customer‑facing login service, jeopardizing GDPR compliance and a critical 1‑hour RTO, and the absence of EDR makes mitigation urgent, so the recommended NIST control IA‑13(3) – Token Management – is essential.</div>
+    <div class="why"><b>Why it ranks here:</b> The Citrix ADC Session Token Leak (CVE‑2023‑4966) is ranked #1 because it is a publicly reachable, authentication‑less vulnerability that is actively exploited by a ransomware‑associated campaign (IronVeil/CitrixBleed), threatens a high‑criticality, customer‑facing login service with a 1‑hour RTO, is listed in the CISA Known Exploited Vulnerabilities catalog, and lacks any EDR protection, making it a top priority to remediate under NIST SP 800‑53 control IA‑13(3) – Token Management.</div>
 
     <div class="nist">
       <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
@@ -220,7 +220,7 @@
       
     
 
-    <div class="why"><b>Why it ranks here:</b> The finding ranks #2 because the publicly exposed VPN gateway is a critical remote‑access asset with a CVE‑2024‑21762 heap‑buffer‑overflow that is exploitable without authentication, is confirmed in the CISA KEV catalog and actively weaponized by the ransomware‑associated “Gateway Breaker” campaign, leaving a 2‑hour RTO with no EDR protection, and the recommended mitigation is the NIST SP 800‑53 control SI‑16 – Memory Protection.</div>
+    <div class="why"><b>Why it ranks here:</b> The finding ranks #2 because the publicly reachable VPN firmware is a critical remote‑access asset with a CVE‑2024‑21762 heap buffer overflow that is exploitable without authentication, is confirmed in the CISA Known Exploited Vulnerabilities catalog, is actively weaponized by the ransomware‑associated “Gateway Breaker” campaign, and the 2‑hour RTO leaves virtually no downtime tolerance, making SI‑16 – Memory Protection – the recommended NIST control.</div>
 
     <div class="nist">
       <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
@@ -232,12 +232,9 @@
       </div>
       
       <div class="control">
-        <span class="sim">similarity 0.53</span>
-        <span class="cid">SI-3</span> — Malicious Code Protection <span style="color:var(--muted); font-size:0.78rem;">(System and Information Integrity)</span>
-        <p>a. Implement [organization-defined parameter] malicious code protection mechanisms at system entry and exit points to detect and eradicate malicious code;
-b. Automatically update malicious code protection mechanisms as new releases are available in accordance with organizational configuration management policy and procedures;
-c. Configure malicious code protection mechanisms to:
-1. Perform periodic scans of the syste…</p>
+        <span class="sim">similarity 0.54</span>
+        <span class="cid">SA-8(26)</span> — Performance Security <span style="color:var(--muted); font-size:0.78rem;">(System and Services Acquisition)</span>
+        <p>Implement the security design principle of performance security in [systems or system components].</p>
       </div>
       
     </div>
@@ -289,7 +286,7 @@ c. Configure malicious code protection mechanisms to:
       
     
 
-    <div class="why"><b>Why it ranks here:</b> The Payment API’s publicly reachable handler, which is exploitable without authentication and is actively targeted by the ransomware‑associated IronVeil “CitrixBleed Exploitation” campaign, poses a critical risk to the customer‑facing Payment Processing service with a 1‑hour RTO, making it #3 in priority and warranting the NIST control AC‑6 – Least Privilege.</div>
+    <div class="why"><b>Why it ranks here:</b> The payment API’s publicly exposed handler, which is exploitable without authentication and is actively targeted by the ransomware‑associated IronVeil “CitrixBleed Exploitation” campaign, poses a critical threat to the customer‑facing payment processing service with a 1‑hour RTO, making it a #3 priority finding that requires the NIST SP 800‑53 control AC‑6 – Least Privilege.</div>
 
     <div class="nist">
       <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
@@ -355,7 +352,7 @@ c. Configure malicious code protection mechanisms to:
       
     
 
-    <div class="why"><b>Why it ranks here:</b> The finding is ranked #4 because the publicly reachable TeamCity Authentication Bypass (CVE‑2024‑27198) is a confirmed, authentication‑less exploit used by the SilentForge “Build Chain Theft” campaign, the asset is high‑criticality and SOC 2‑in‑scope, yet no EDR protects it, making IA‑2(6) – Access to Accounts — separate Device the appropriate NIST control to mitigate this risk.</div>
+    <div class="why"><b>Why it ranks here:</b> The finding is ranked #4 because the publicly reachable TeamCity Authentication Handler is exploitable without authentication, is confirmed in the CISA Known Exploited Vulnerabilities catalog, and is actively weaponized by SilentForge’s “Build Chain Theft” campaign, yet the asset lacks EDR and is critical to the DevOps Platform, so the recommended NIST control IA‑2(6) – Access to Accounts — separate Device – is required to mitigate this risk.</div>
 
     <div class="nist">
       <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>
@@ -423,7 +420,7 @@ c. Configure malicious code protection mechanisms to:
       
     
 
-    <div class="why"><b>Why it ranks here:</b> The finding is ranked #5 of 5 because the internet‑exposed Kong Gateway Admin API is exploitable without authentication, is actively weaponized by the ransomware‑associated WinterViper campaign, and the partner‑facing, PCI DSS/ISO 27001‑critical API server has a 2‑hour RTO, making the lack of non‑privileged user interface controls (SC‑2(1)) a critical risk.</div>
+    <div class="why"><b>Why it ranks here:</b> The finding ranks #5 because the publicly reachable Kong Gateway Admin API, which is exploitable without authentication and is actively weaponized by the ransomware-associated WinterViper campaign, exposes a critical customer‑facing partner API gateway that must remain online within a 2‑hour RTO, and the appropriate NIST control to mitigate this is SC‑2(1) – Interfaces for Non‑privileged Users.</div>
 
     <div class="nist">
       <h4>NIST SP 800-53 Rev 5 guidance (retrieved live via embeddings)</h4>

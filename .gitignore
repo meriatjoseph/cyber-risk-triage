@@ -8,3 +8,6 @@ data/kev_catalog.json
 *.egg-info/
 .pytest_cache/
 .DS_Store
+
+# Local audit write-up, kept out of the public repo
+PROJECT_REPORT.md

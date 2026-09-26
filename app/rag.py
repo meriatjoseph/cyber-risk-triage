@@ -15,8 +15,13 @@ Two interchangeable embedding backends behind the same embed() interface:
               (e.g. no internet access to Hugging Face in this environment)
 
 Vector store: ChromaDB, persisted to .chroma/ so the index survives restarts
-and doesn't need re-embedding on every deploy.
+and doesn't need re-embedding on every deploy. The index holds passages,
+not whole controls: MiniLM only reads 256 tokens, so the 176 longer
+controls are split into header-prefixed passages (1,243 in total) and each
+control is scored by its best passage. A persisted index is reused only if
+a SHA-256 of its passages matches the current corpus.
 """
+import hashlib
 import json
 import os
 import re
@@ -43,6 +48,16 @@ class SentenceTransformerEmbedder(Embedder):
         from sentence_transformers import SentenceTransformer
 
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        # MiniLM silently truncates anything past max_seq_length (256) tokens.
+        # 176 of the 1,014 NIST chunks are longer, so they're split into
+        # passages that fit (see split_into_passages). 2 slots are reserved
+        # for the [CLS]/[SEP] tokens the tokenizer adds.
+        self.token_budget = self.model.max_seq_length - 2
+
+    def token_len(self, text: str) -> int:
+        # verbose=False: counting a long text is the point here, so the
+        # tokenizer's "longer than max length" warning is just noise.
+        return len(self.model.tokenizer(text, add_special_tokens=False, verbose=False)["input_ids"])
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         return self.model.encode(texts, show_progress_bar=False, normalize_embeddings=True).tolist()
@@ -82,6 +97,54 @@ def load_nist_chunks() -> list[dict]:
     return chunks
 
 
+_SENTENCE_BREAK_RE = re.compile(r"(?<=[.;:])\s+")
+
+
+def split_into_passages(chunk: dict, token_len, budget: int) -> list[str]:
+    """Splits one NIST control chunk into passages of at most `budget` tokens.
+
+    Each passage starts with the control's "<ID> <Title>" header so it still
+    reads as that control on its own. Text is packed greedily by line, then
+    by sentence, so boundaries fall on natural breaks; a single sentence
+    longer than the budget is split by words as a last resort. A chunk that
+    already fits comes back unchanged as one passage.
+    """
+    text = chunk["text"]
+    if token_len(text) <= budget:
+        return [text]
+
+    header = f"{chunk['control_id']} {chunk['title']}"
+    body = text[len(header):].strip() if text.startswith(header) else text
+    room = budget - token_len(header + "\n") - 1
+
+    pieces: list[str] = []
+    for line in (ln.strip() for ln in body.split("\n")):
+        if not line:
+            continue
+        for sentence in _SENTENCE_BREAK_RE.split(line):
+            if token_len(sentence) <= room:
+                pieces.append(sentence)
+                continue
+            words, part = sentence.split(), []
+            for w in words:
+                if part and token_len(" ".join(part + [w])) > room:
+                    pieces.append(" ".join(part))
+                    part = []
+                part.append(w)
+            if part:
+                pieces.append(" ".join(part))
+
+    passages, current = [], []
+    for piece in pieces:
+        if current and token_len(" ".join(current + [piece])) > room:
+            passages.append(f"{header}\n{' '.join(current)}")
+            current = []
+        current.append(piece)
+    if current:
+        passages.append(f"{header}\n{' '.join(current)}")
+    return passages
+
+
 @dataclass
 class RetrievedControl:
     control_id: str
@@ -96,14 +159,15 @@ class RetrievedControl:
 class NistControlRetriever:
     def __init__(self, persist: bool = True):
         self.chunks = load_nist_chunks()
+        self._by_id = {c["control_id"]: c for c in self.chunks}
         self._backend = "unknown"
         self._collection = None
         self._embedder: Embedder | None = None
+        self.passage_count = 0
         self._build_index(persist=persist)
 
     def _build_index(self, persist: bool) -> None:
         texts = [c["text"] for c in self.chunks]
-        ids = [c["control_id"] for c in self.chunks]
 
         # torch + sentence-transformers add ~450MB of RSS just from being
         # imported, before any model or index exists -- fine locally, but
@@ -123,6 +187,29 @@ class NistControlRetriever:
         self._embedder = embedder
         self._backend = embedder.backend_name
 
+        # One index row per passage, not per control. MiniLM needs long
+        # controls split to stay under its 256-token limit; TF-IDF has no
+        # length limit, so it keeps one passage per control (unchanged).
+        passage_ids, passage_texts, metadatas = [], [], []
+        for c in self.chunks:
+            if isinstance(embedder, SentenceTransformerEmbedder):
+                parts = split_into_passages(c, embedder.token_len, embedder.token_budget)
+            else:
+                parts = [c["text"]]
+            for n, part in enumerate(parts):
+                passage_ids.append(f"{c['control_id']}#{n}")
+                passage_texts.append(part)
+                metadatas.append({"control_id": c["control_id"], "title": c["title"], "family": c["family"]})
+        self.passage_count = len(passage_ids)
+
+        # Fingerprint of exactly what gets embedded: a persisted index is only
+        # reused if it was built from the same passages. (Comparing row counts
+        # alone would silently reuse stale vectors after a same-size change.)
+        fingerprint = hashlib.sha256(
+            "\x1e".join(f"{i}\x1f{t}" for i, t in zip(passage_ids, passage_texts)).encode("utf-8")
+        ).hexdigest()
+        collection_meta = {"hnsw:space": "cosine", "corpus_sha256": fingerprint}
+
         import chromadb
 
         if persist:
@@ -131,45 +218,61 @@ class NistControlRetriever:
             client = chromadb.EphemeralClient()
 
         collection_name = f"nist80053_{'st' if isinstance(embedder, SentenceTransformerEmbedder) else 'tfidf'}"
-        collection = client.get_or_create_collection(collection_name, metadata={"hnsw:space": "cosine"})
+        collection = client.get_or_create_collection(collection_name, metadata=collection_meta)
 
-        if persist and collection.count() == len(ids):
+        if (
+            persist
+            and (collection.metadata or {}).get("corpus_sha256") == fingerprint
+            and collection.count() == len(passage_ids)
+        ):
             self._collection = collection
-            print(f"[rag] reusing persisted index of {len(ids)} NIST 800-53 chunks (backend={self._backend})")
+            print(
+                f"[rag] reusing persisted index of {len(passage_ids)} passages from "
+                f"{len(self.chunks)} NIST 800-53 controls (backend={self._backend})"
+            )
             return
 
-        if collection.count() > 0:
+        if collection.count() > 0 or (collection.metadata or {}).get("corpus_sha256") != fingerprint:
             client.delete_collection(collection_name)
-            collection = client.create_collection(collection_name, metadata={"hnsw:space": "cosine"})
+            collection = client.create_collection(collection_name, metadata=collection_meta)
 
-        embeddings = embedder.embed(texts)
+        embeddings = embedder.embed(passage_texts)
         batch = 256
-        for i in range(0, len(ids), batch):
+        for i in range(0, len(passage_ids), batch):
             collection.add(
-                ids=ids[i : i + batch],
+                ids=passage_ids[i : i + batch],
                 embeddings=embeddings[i : i + batch],
-                documents=texts[i : i + batch],
-                metadatas=[
-                    {"title": c["title"], "family": c["family"]} for c in self.chunks[i : i + batch]
-                ],
+                documents=passage_texts[i : i + batch],
+                metadatas=metadatas[i : i + batch],
             )
         self._collection = collection
-        print(f"[rag] indexed {len(ids)} NIST 800-53 chunks using backend={self._backend}")
+        print(
+            f"[rag] indexed {len(passage_ids)} passages from {len(self.chunks)} NIST 800-53 "
+            f"controls using backend={self._backend}"
+        )
 
     @property
     def backend_name(self) -> str:
         return self._backend
 
     def query(self, query_text: str, k: int = 2) -> list[RetrievedControl]:
+        """Top-k distinct controls. Several passages of one control can rank
+        near each other, so more passages than k are fetched and each
+        control is scored by its best-matching passage."""
         query_embedding = self._embedder.embed([query_text])[0]
-        result = self._collection.query(query_embeddings=[query_embedding], n_results=k)
-        out = []
-        by_id = {c["control_id"]: c for c in self.chunks}
-        ids = result["ids"][0]
-        distances = result.get("distances", [[None] * len(ids)])[0]
-        for cid, dist in zip(ids, distances):
-            chunk = by_id[cid]
+        n = min(max(k * 8, 20), self.passage_count)
+        result = self._collection.query(query_embeddings=[query_embedding], n_results=n)
+        best: dict[str, float] = {}
+        metas = result["metadatas"][0]
+        distances = result.get("distances", [[None] * len(metas)])[0]
+        for meta, dist in zip(metas, distances):
             similarity = 1 - dist if dist is not None else float("nan")
+            cid = meta["control_id"]
+            if cid not in best or similarity > best[cid]:
+                best[cid] = similarity
+        out = []
+        for cid, similarity in sorted(best.items(), key=lambda kv: -kv[1])[:k]:
+            chunk = self._by_id[cid]
             out.append(
                 RetrievedControl(
                     control_id=chunk["control_id"],
