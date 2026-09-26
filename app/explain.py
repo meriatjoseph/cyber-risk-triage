@@ -18,21 +18,37 @@ for any reason (no key, no network, rate limit), we silently fall back to
 the template -- the report must never depend on an external API being up.
 """
 import os
+import re
 
 from app import config
 from app.enrichment import EnrichedRisk
 from app.rag import RetrievedControl
 from app.scoring import ScoreBreakdown
 
+# Claims of being #1. If a lower-ranked sentence still says this despite the
+# prompt, it's factually wrong, so it's discarded in favour of the template.
+_TOP_RANK_CLAIM_RE = re.compile(
+    r"\b(ranks?|ranked|ranking)\s+(the\s+)?(highest|first|top)\b|"
+    r"\b(highest|top)[- ]ranked\b|\b(ranks?|ranked)\s+#?1\b|\bnumber one\b",
+    re.I,
+)
 
-def _template_explanation(rank: int, risk: EnrichedRisk, score: ScoreBreakdown) -> str:
+
+def _also_affected_text(also_affected) -> str:
+    return ", ".join(f"{o.asset_name} ({o.business_service})" for o, _ in also_affected or [])
+
+
+def _template_explanation(
+    rank: int, risk: EnrichedRisk, score: ScoreBreakdown, also_affected=None
+) -> str:
     reasons = score.reasons[:3]
     if not reasons:
         reasons = ["elevated relative to peer findings once exposure, exploitation, and business impact are weighed together"]
     reason_text = "; ".join(reasons)
-    return (
-        f"Ranked #{rank} (score {score.total:.0f}/100) because {reason_text}."
-    )
+    text = f"Ranked #{rank} (score {score.total:.0f}/100) because {reason_text}."
+    if also_affected:
+        text += f" The same finding is also open on {_also_affected_text(also_affected)}."
+    return text
 
 
 def _groq_explanation(
@@ -40,6 +56,7 @@ def _groq_explanation(
     risk: EnrichedRisk,
     score: ScoreBreakdown,
     nist_controls: list[RetrievedControl] | None = None,
+    also_affected=None,
 ) -> str | None:
     api_key = os.environ.get(config.GROQ_API_KEY_ENV)
     if not api_key:
@@ -55,16 +72,28 @@ def _groq_explanation(
             if top_control
             else ""
         )
+        also_line = (
+            f"Same finding also open on: {_also_affected_text(also_affected)}\n" if also_affected else ""
+        )
         prompt = (
             "You are a security analyst writing ONE plain-English sentence explaining why a "
             "specific risk finding ranks where it does in a prioritised report, and naming the "
             "recommended NIST control. "
             "Use ONLY the facts listed below. Do not invent any fact, number, CVE, campaign "
             "name, or control id that is not in the list. Do not mention the numeric score. "
-            "Output exactly one sentence.\n\n"
+            # Without the rank the model guessed, and wrote "ranks highest"
+            # for #3-#5 too. Give it the rank and forbid superlatives elsewhere.
+            f"This finding is ranked #{rank} of {config.TOP_N_RISKS}. "
+            + (
+                "You may say it ranks highest. "
+                if rank == 1
+                else f"Do NOT say it ranks highest, first, or top; if you mention its position, say #{rank}. "
+            )
+            + "Output exactly one sentence.\n\n"
             f"Asset: {risk.asset_name} ({risk.asset_type})\n"
             f"Vulnerability: {risk.vulnerability_name} ({risk.cve})\n"
             f"Business service: {risk.business_service}\n"
+            f"{also_line}"
             f"Facts:\n{facts}\n"
             f"{control_line}\n"
             "One-sentence explanation:"
@@ -90,6 +119,9 @@ def _groq_explanation(
         if not content:
             print("[explain] Groq returned empty content, falling back to template")
             return None
+        if rank != 1 and _TOP_RANK_CLAIM_RE.search(content):
+            print(f"[explain] Groq sentence for #{rank} claims top rank, falling back to template")
+            return None
         return content
     except Exception as e:  # noqa: BLE001 - never let LLM issues break the report
         print(f"[explain] Groq call failed, falling back to template: {e}")
@@ -101,6 +133,7 @@ def explain_risk(
     risk: EnrichedRisk,
     score: ScoreBreakdown,
     nist_controls: list[RetrievedControl] | None = None,
+    also_affected=None,
 ) -> str:
-    llm_text = _groq_explanation(rank, risk, score, nist_controls)
-    return llm_text if llm_text else _template_explanation(rank, risk, score)
+    llm_text = _groq_explanation(rank, risk, score, nist_controls, also_affected)
+    return llm_text if llm_text else _template_explanation(rank, risk, score, also_affected)

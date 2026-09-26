@@ -43,6 +43,12 @@
   .why { background: var(--panel2); border-left:3px solid var(--accent2); border-radius:8px; padding:12px 16px; margin: 14px 0; font-size:0.95rem; }
   .why b { color: var(--accent2); }
   .threat-box { border-left:3px solid var(--accent); background:#1c1216; border-radius:8px; padding:12px 16px; margin: 10px 0; font-size:0.9rem; }
+  .threat-box.possible { border-left-color: var(--accent2); background:#221c12; }
+  .threat-box .verify { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color: var(--accent2); margin-bottom:4px; }
+  .also { background: var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px 16px; margin: 0 0 14px; }
+  .also label { display:block; font-size:0.72rem; color: var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .also ul { margin:6px 0 0; padding-left:18px; font-size:0.9rem; }
+  .also-score { color: var(--muted); font-size:0.8rem; }
   .threat-box.none { border-left-color: var(--line); background: var(--panel2); color: var(--muted); }
   .nist { margin-top: 16px; }
   .nist h4 { margin: 0 0 8px; font-size:0.85rem; text-transform:uppercase; letter-spacing:.04em; color: var(--muted); }
@@ -93,7 +99,10 @@
       <span class="badge {{ 'danger' if r.internet_exposed else '' }}">{{ 'Internet-exposed' if r.internet_exposed else 'Internal only' }}</span>
       <span class="badge {{ 'danger' if r.kev_listed else '' }}">{{ 'In CISA KEV' if r.kev_listed else 'Not in KEV' }}</span>
       {% if r.kev_ransomware_known %}<span class="badge danger">KEV: known ransomware use</span>{% endif %}
-      <span class="badge {{ 'danger' if r.has_campaign_match else '' }}">{{ 'Active campaign match' if r.has_campaign_match else 'No campaign match' }}</span>
+      {% if r.has_campaign_match %}<span class="badge danger">Active campaign match</span>
+      {% elif r.has_possible_campaign_match %}<span class="badge warn">Possible campaign match (verify)</span>
+      {% else %}<span class="badge">No campaign match</span>{% endif %}
+      {% if e.also_affected %}<span class="badge warn">Also on {{ e.also_affected|length }} more asset{{ 's' if e.also_affected|length > 1 else '' }}</span>{% endif %}
       <span class="badge {{ 'ok' if r.edr_installed else 'warn' }}">{{ 'EDR installed' if r.edr_installed else 'No EDR' }}</span>
       <span class="badge {{ 'ok' if r.patch_available else 'warn' }}">{{ 'Patch available' if r.patch_available else 'No patch available' }}</span>
       <span class="badge {{ 'warn' if not r.auth_required else '' }}">{{ 'Unauthenticated exploit' if not r.auth_required else 'Auth required to exploit' }}</span>
@@ -107,9 +116,21 @@
       <div class="field"><label>Business context</label><div class="val">Customer-facing: {{ 'Yes' if r.customer_facing else 'No' }} &middot; Compliance: {{ r.compliance_scope }}{% if r.rto_hours %} &middot; RTO: {{ r.rto_hours|int }}h{% endif %}</div></div>
     </div>
 
+    {% if e.also_affected %}
+    <div class="also">
+      <label>Same finding also open on</label>
+      <ul>
+        {% for o, os_ in e.also_affected %}
+        <li><b>{{ o.asset_name }}</b> ({{ o.environment }}) — {{ o.business_service }}, compliance: {{ o.compliance_scope }} <span class="also-score">score {{ "%.0f"|format(os_.total) }}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
     {% if r.threat_matches %}
       {% for m in r.threat_matches %}
-      <div class="threat-box">
+      <div class="threat-box {{ 'possible' if m.near_miss else '' }}">
+        {% if m.near_miss %}<div class="verify">Possible match — verify: intel lists {{ m.listed_cve }}, this finding is recorded as {{ r.cve }}</div>{% endif %}
         <b>{{ m.threat_actor }} / "{{ m.campaign_name }}"</b> &mdash; {{ m.exploit_maturity }}, {{ m.confidence }} confidence,
         ransomware-associated: {{ 'Yes' if m.ransomware_association else 'No' }} (last seen {{ m.active_last_seen }})
         <p style="margin:6px 0 0; color:#cbb; font-size:0.85rem;">{{ m.summary }}</p>

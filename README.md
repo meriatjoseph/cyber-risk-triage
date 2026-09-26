@@ -22,7 +22,10 @@ checks this holds.
 - `app/ingestion.py` - loads the 5 CSVs into SQLite.
 - `app/kev.py` - reads the real CISA KEV catalog once it's fetched.
 - `app/enrichment.py` - joins assets, vulnerabilities, business services,
-  threat intel, and checks each vuln against KEV.
+  threat intel, and checks each vuln against KEV. Intel is matched on exact
+  CVE first; a second pass on normalised IDs (`CVE-SYN-2025-0333` ~
+  `CVE-2025-0333`) keeps near-misses as "possible match - verify" instead
+  of dropping them (see Q2 #2).
 - `app/scoring.py` - the actual scoring. Plain arithmetic, no black box.
 - `app/rag.py` - embeds the NIST 800-53 controls, searches them with
   ChromaDB for the best match per risk. For a recognised vulnerability class
@@ -40,10 +43,15 @@ checks this holds.
 - `app/pipeline.py` - runs all of the above and builds the final list.
 - `app/main.py` - FastAPI app that serves it as a web page.
 
-The top-5 list only shows one issue per asset - otherwise two identical
-Fortinet boxes with the same bug could eat 4 of the 5 slots, which is
-accurate but useless as a briefing. The full ranking (no dedup) is what the
-tests check.
+The top-5 list shows one issue per asset, and then folds the same finding
+on several assets into one entry. TawasolPay runs redundant pairs (two
+load balancers, two VPN edges): without the second step, CitrixBleed on
+both load balancers and the Fortinet bug on both VPN edges took 4 of the
+5 slots - one fix each, two slots each. Now each of those is one entry
+with a "same finding also on" list (every twin keeps its own score and
+business service, since twins can front different services), and the
+top 5 covers 5 distinct problems across 8 assets. The full per-finding
+ranking (no dedup) is still available and is what the scoring tests check.
 
 ## Running it locally
 
@@ -71,6 +79,13 @@ Then open:
 - `http://127.0.0.1:8000/` - the report
 - `http://127.0.0.1:8000/report.md` - same thing, markdown
 - `http://127.0.0.1:8000/api/top5` - same thing, JSON
+
+`POST /refresh` recomputes the report. It re-runs the whole pipeline (and
+up to 5 Groq calls), so on a public URL it's locked: set `REFRESH_TOKEN`
+in `.env` and send it as a header -
+`curl -X POST -H "X-Refresh-Token: $REFRESH_TOKEN" http://127.0.0.1:8000/refresh`.
+With `REFRESH_TOKEN` unset the route returns 403. `render.yaml` has
+Render generate a random token.
 
 No server needed: `python scripts/run_pipeline.py` writes `output/report.md`
 and `output/report.html` directly.
@@ -137,7 +152,10 @@ asset ID either matches a vuln or it doesn't, a CVE is either in KEV or
 it isn't. No reason to embed that and turn a certain answer into a guess.
 It also matters that 15 of the 40 threat intel rows are meant to not match
 anything - an exact lookup makes those correctly return zero matches
-instead of fuzzily latching onto something similar.
+instead of fuzzily latching onto something similar. (The one deliberate
+exception is a narrow, rule-based ID normalisation for near-misses - see
+Q2 #2 - which is still exact matching, just on a cleaned-up ID, and is
+flagged for a human to verify.)
 
 `remediation_guidance.csv` isn't used either way. The assignment treats it
 as a wording hint, not a source to query, so it doesn't feed the score and
@@ -152,13 +170,21 @@ it isn't embedded. Remediation text always comes from the live NIST search.
    something's in neither, the system has no way to know. Real fix:
    re-run the KEV fetch on a schedule, not once.
 
-2. **CVE matching is exact string comparison.** If the same bug got
-   reported under a slightly different CVE ID or a range, the join just
-   comes back empty instead of flagging "might be related, check this."
-   Right now "no match" is treated as normal (correct for this dataset,
-   since a lot of the sample rows are meant to not match) - but in a real
-   environment a near-miss like that gets silently dropped instead of
-   surfaced to a person.
+2. **CVE matching can miss the same bug under a different ID.** This
+   actually happened in the provided data: the brief says 25 intel rows
+   match the environment, but exact matching found 24. The missing one is
+   TI-3012 ("HR Data Theft", AmberFox), which lists `CVE-2025-0333` - while
+   the file-upload bug on `hr-portal-prod` is recorded as
+   `CVE-SYN-2025-0333`. Pure string equality silently dropped it. What I
+   did: a second pass compares normalised IDs (synthetic prefix stripped,
+   case/whitespace folded). A hit there is kept as a *possible* match -
+   labelled "verify" in the report and the JSON (`possible_match_verify`),
+   and scored one confidence step lower than the feed claims - rather than
+   either trusted or thrown away. It finds exactly that one row and no
+   false positives (`tests/test_enrichment.py` pins this). What it still
+   can't catch: a genuinely different ID for the same bug (e.g. a vendor
+   advisory number, or a CVE range) - that needs an alias table such as
+   the NVD/OSV cross-references.
 
 3. **The NIST control it finds might not be the best one.** Semantic
    search isn't a certified mapping table. For an unusual bug the top hit
@@ -175,6 +201,10 @@ it isn't embedded. Remediation text always comes from the live NIST search.
    It never touches the score or the `/api/top5` fields either; those come
    straight from `scoring.py` and `rag.py`. And any failure just falls back
    to the template, so a flaky API degrades phrasing, not the report.
+   One drift that did happen: before the prompt was given the rank, Groq
+   wrote "ranks highest" for entries #3-#5. Now the prompt states the rank,
+   and a sentence for #2-#5 that still claims top rank is rejected in code
+   and replaced by the template (`tests/test_explain.py`).
 
 ## Q3: If I had one more day
 

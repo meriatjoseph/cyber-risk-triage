@@ -1,6 +1,6 @@
 # TawasolPay — Top 5 Prioritised Cyber Risks
 
-_Generated 2026-09-15 18:20 UTC — ranked by exposure, active exploitation, campaign match, business criticality, and missing controls (NOT CVSS alone)._
+_Generated 2026-09-26 17:11 UTC — ranked by exposure, active exploitation, campaign match, business criticality, and missing controls (NOT CVSS alone)._
 
 > **MDR Advisory — Risk level: HIGH.** Three active ransomware-associated campaigns have been observed exploiting vulnerabilities present in common fintech infrastructure. At least two of these campaigns have confirmed victims in the UAE this month.  
 > Named campaigns: CrimsonJackal, RedMantis, SilentForge, IronVeil, WinterViper.
@@ -14,7 +14,8 @@ _Generated 2026-09-15 18:20 UTC — ranked by exposure, active exploitation, cam
 - **CISA KEV:** confirmed actively exploited (added 2023-10-18), **known ransomware campaign use**
 - **Threat intel match:** IronVeil / "CitrixBleed Exploitation" (Active Exploitation, High confidence, ransomware-associated: Yes) — IronVeil group actively exploiting Citrix NetScaler CitrixBleed CVE-2023-4966 to harvest session tokens from load balancers protecting financial portals. Tokens used to bypass MFA.
 - **Business service at risk:** Customer Login (owner: Chief Digital Officer) — Users cannot authenticate to the customer portal; all customer-facing transactions blocked. Customer-facing: Yes; compliance scope: GDPR; RTO: 1h
-- **Why it ranks here:** The Citrix ADC Session Token Leak (CVE‑2023‑4966) is ranked highest because it is publicly reachable, actively exploited by a ransomware‑associated campaign, exposes a customer‑facing login with a 1‑hour RTO, is in scope for GDPR, and the asset lacks EDR, making IA‑13(3) – Token Management the required NIST control.
+- **Same finding also on:** load-balancer-prod-02 (Production) — Payment Processing, compliance scope: PCI DSS (score 94/100)
+- **Why it ranks here:** This finding ranks highest because the publicly reachable Citrix ADC is vulnerable to a known, actively exploited session‑token leak (CVE‑2023‑4966) that can be abused without authentication to compromise the customer‑facing login service, jeopardizing GDPR compliance and a critical 1‑hour RTO, and the absence of EDR makes mitigation urgent, so the recommended NIST control IA‑13(3) – Token Management – is essential.
 - **NIST SP 800-53 Rev 5 guidance (retrieved via embeddings):**
   - **IA-13(3) — Token Management** _(similarity 0.40)_: In accordance with [organization-defined parameter], assertions and access tokens are:
 (a) generated;
@@ -27,63 +28,63 @@ _Generated 2026-09-15 18:20 UTC — ranked by exposure, active exploitation, cam
 
 ---
 
-## #2 — load-balancer-prod-02 · Citrix ADC Session Token Leak (CitrixBleed)  (Risk score: 94/100)
-
-- **Asset:** load-balancer-prod-02 (Load Balancer, Production, UAE) — owner: Network Team; internet-exposed: Yes; EDR installed: No
-- **Vulnerability:** Citrix ADC Session Token Leak (CitrixBleed) (CVE-2023-4966, CVSS 9.4 Critical); exposure: Internet; auth required to exploit: No; patch available: Yes
-- **CISA KEV:** confirmed actively exploited (added 2023-10-18), **known ransomware campaign use**
-- **Threat intel match:** IronVeil / "CitrixBleed Exploitation" (Active Exploitation, High confidence, ransomware-associated: Yes) — IronVeil group actively exploiting Citrix NetScaler CitrixBleed CVE-2023-4966 to harvest session tokens from load balancers protecting financial portals. Tokens used to bypass MFA.
-- **Business service at risk:** Payment Processing (owner: CFO) — Payments and fund transfers fail; PCI DSS breach obligations triggered. Customer-facing: Yes; compliance scope: PCI DSS; RTO: 1h
-- **Why it ranks here:** The Citrix ADC Session Token Leak (CVE‑2023‑4966) on load‑balancer‑prod‑02 is ranked highest because it is internet‑exposed, exploitable without authentication, confirmed in the CISA KEV, actively exploited by the ransomware‑associated IronVeil “CitrixBleed Exploitation” campaign, and threatens the high‑criticality, customer‑facing Payment Processing service with a 1‑hour RTO and PCI DSS scope, so the recommended NIST control is IA‑13(3) – Token Management.
-- **NIST SP 800-53 Rev 5 guidance (retrieved via embeddings):**
-  - **IA-13(3) — Token Management** _(similarity 0.40)_: In accordance with [organization-defined parameter], assertions and access tokens are:
-(a) generated;
-(b) issued;
-(c) refreshed;
-(d) revoked;
-(e) time-restricted; and
-(f) audience-restricted....
-  - **SA-11(6) — Attack Surface Reviews** _(similarity 0.37)_: Require the developer of the system, system component, or system service to perform attack surface reviews....
-
----
-
-## #3 — vpn-edge-01 · Fortinet SSL-VPN Heap Buffer Overflow RCE  (Risk score: 94/100)
+## #2 — vpn-edge-01 · Fortinet SSL-VPN Heap Buffer Overflow RCE  (Risk score: 94/100)
 
 - **Asset:** vpn-edge-01 (VPN Gateway, Production, UAE) — owner: Network Team; internet-exposed: Yes; EDR installed: No
 - **Vulnerability:** Fortinet SSL-VPN Heap Buffer Overflow RCE (CVE-2024-21762, CVSS 9.8 Critical); exposure: Internet; auth required to exploit: No; patch available: Yes
 - **CISA KEV:** confirmed actively exploited (added 2024-02-09), **known ransomware campaign use**
 - **Threat intel match:** CrimsonJackal / "Gateway Breaker" (Weaponized, High confidence, ransomware-associated: Yes) — Active exploitation of Fortinet SSL-VPN CVE-2024-21762 observed against financial services and fintech firms in the Gulf region. Initial access leads to internal lateral movement and ransomware staging.
 - **Business service at risk:** Remote Access (owner: CIO) — Remote employees and administrators lose secure network access. Customer-facing: No; compliance scope: ISO 27001; RTO: 2h
-- **Why it ranks here:** The VPN gateway’s publicly reachable firmware, the confirmed CVE‑2024‑21762 with weaponized exploit code actively used by the ransomware‑associated CrimsonJackal “Gateway Breaker” campaign, its critical business service impact, zero authentication requirement, and the asset’s criticality with a 2‑hour RTO make this finding a top‑priority risk, so it is mitigated by implementing NIST SP 800‑53 control SA‑15(5) – Attack Surface Reduction.
+- **Same finding also on:** vpn-edge-02 (Production) — Remote Access, compliance scope: ISO 27001 (score 94/100)
+- **Same finding also on:** vpn-staging (Staging) — Remote Access, compliance scope: ISO 27001 (score 90/100)
+- **Why it ranks here:** The finding ranks #2 because the publicly exposed VPN gateway is a critical remote‑access asset with a CVE‑2024‑21762 heap‑buffer‑overflow that is exploitable without authentication, is confirmed in the CISA KEV catalog and actively weaponized by the ransomware‑associated “Gateway Breaker” campaign, leaving a 2‑hour RTO with no EDR protection, and the recommended mitigation is the NIST SP 800‑53 control SI‑16 – Memory Protection.
 - **NIST SP 800-53 Rev 5 guidance (retrieved via embeddings):**
-  - **SA-15(5) — Attack Surface Reduction** _(similarity 0.40)_: Require the developer of the system, system component, or system service to reduce attack surfaces to [thresholds]....
-  - **RA-5(10) — Correlate Scanning Information** _(similarity 0.40)_: Correlate the output from vulnerability scanning tools to determine the presence of multi-vulnerability and multi-hop attack vectors....
+  - **SI-16 — Memory Protection** _(similarity 0.69)_: Implement the following controls to protect the system memory from unauthorized code execution: [controls]....
+  - **SI-3 — Malicious Code Protection** _(similarity 0.53)_: a. Implement [organization-defined parameter] malicious code protection mechanisms at system entry and exit points to detect and eradicate malicious code;
+b. Automatically update malicious code protection mechanisms as new releases are available in accordance with organizational configuration management policy and procedures;
+c. Configure malicious code protection mechanisms to:
+1. Perform periodi...
 
 ---
 
-## #4 — vpn-edge-02 · Fortinet SSL-VPN Heap Buffer Overflow RCE  (Risk score: 94/100)
-
-- **Asset:** vpn-edge-02 (VPN Gateway, Production, UAE) — owner: Network Team; internet-exposed: Yes; EDR installed: No
-- **Vulnerability:** Fortinet SSL-VPN Heap Buffer Overflow RCE (CVE-2024-21762, CVSS 9.8 Critical); exposure: Internet; auth required to exploit: No; patch available: Yes
-- **CISA KEV:** confirmed actively exploited (added 2024-02-09), **known ransomware campaign use**
-- **Threat intel match:** CrimsonJackal / "Gateway Breaker" (Weaponized, High confidence, ransomware-associated: Yes) — Active exploitation of Fortinet SSL-VPN CVE-2024-21762 observed against financial services and fintech firms in the Gulf region. Initial access leads to internal lateral movement and ransomware staging.
-- **Business service at risk:** Remote Access (owner: CIO) — Remote employees and administrators lose secure network access. Customer-facing: No; compliance scope: ISO 27001; RTO: 2h
-- **Why it ranks here:** The VPN gateway’s publicly exposed firmware, the CVE‑2024‑21762 heap overflow confirmed in CISA’s Known Exploited Vulnerabilities catalog and actively weaponized by the ransomware‑associated CrimsonJackal “Gateway Breaker” campaign, combined with the asset’s critical remote‑access role, 2‑hour RTO, lack of EDR, and the fact that the flaw is exploitable without authentication, places this finding at the top of the priority list and warrants implementing NIST SP 800‑53 control SA‑15(5) – Attack Surface Reduction.
-- **NIST SP 800-53 Rev 5 guidance (retrieved via embeddings):**
-  - **SA-15(5) — Attack Surface Reduction** _(similarity 0.40)_: Require the developer of the system, system component, or system service to reduce attack surfaces to [thresholds]....
-  - **RA-5(10) — Correlate Scanning Information** _(similarity 0.40)_: Correlate the output from vulnerability scanning tools to determine the presence of multi-vulnerability and multi-hop attack vectors....
-
----
-
-## #5 — payment-api-prod-01 · Payment API Insecure Direct Object Reference  (Risk score: 90/100)
+## #3 — payment-api-prod-01 · Payment API Insecure Direct Object Reference  (Risk score: 90/100)
 
 - **Asset:** payment-api-prod-01 (API Server, Production, UAE) — owner: Payments Team; internet-exposed: Yes; EDR installed: Yes
 - **Vulnerability:** Payment API Insecure Direct Object Reference (CVE-SYN-2026-0010, CVSS 9.1 Critical); exposure: Internet; auth required to exploit: No; patch available: Yes
 - **Threat intel match:** IronVeil / "CitrixBleed Exploitation" (Active Exploitation, High confidence, ransomware-associated: Yes) — IronVeil also targeting payment API IDOR vulnerabilities in tandem with CitrixBleed to escalate access post-session-hijack.
 - **Business service at risk:** Payment Processing (owner: CFO) — Payments and fund transfers fail; PCI DSS breach obligations triggered. Customer-facing: Yes; compliance scope: PCI DSS; RTO: 1h
-- **Why it ranks here:** The payment‑API‑prod‑01 server is ranked highest because its publicly reachable Payment Handler is vulnerable to CVE‑SYN‑2026‑0010, which is actively exploited by the ransomware‑associated IronVeil “CitrixBleed Exploitation” campaign, the asset is critical for a customer‑facing payment processing service with a 1‑hour RTO, and it is in‑scope for PCI DSS, so the incident response control IR‑6(2) – Vulnerabilities Related to Incidents – is the recommended NIST control.
+- **Why it ranks here:** The Payment API’s publicly reachable handler, which is exploitable without authentication and is actively targeted by the ransomware‑associated IronVeil “CitrixBleed Exploitation” campaign, poses a critical risk to the customer‑facing Payment Processing service with a 1‑hour RTO, making it #3 in priority and warranting the NIST control AC‑6 – Least Privilege.
 - **NIST SP 800-53 Rev 5 guidance (retrieved via embeddings):**
-  - **IR-6(2) — Vulnerabilities Related to Incidents** _(similarity 0.38)_: Report system vulnerabilities associated with reported incidents to [personnel or roles]....
-  - **SC-7(25) — Unclassified National Security System Connections** _(similarity 0.37)_: Prohibit the direct connection of [unclassified national security system] to an external network without the use of [boundary protection device]....
+  - **AC-6 — Least Privilege** _(similarity 0.69)_: Employ the principle of least privilege, allowing only authorized accesses for users (or processes acting on behalf of users) that are necessary to accomplish assigned organizational tasks....
+  - **AC-3 — Access Enforcement** _(similarity 0.66)_: Enforce approved authorizations for logical access to information and system resources in accordance with applicable access control policies....
+
+---
+
+## #4 — teamcity-prod · JetBrains TeamCity Authentication Bypass  (Risk score: 90/100)
+
+- **Asset:** teamcity-prod (Build Server, Production, UAE) — owner: DevOps; internet-exposed: Yes; EDR installed: No
+- **Vulnerability:** JetBrains TeamCity Authentication Bypass (CVE-2024-27198, CVSS 9.8 Critical); exposure: Internet; auth required to exploit: No; patch available: Yes
+- **CISA KEV:** confirmed actively exploited (added 2024-03-07), **known ransomware campaign use**
+- **Threat intel match:** SilentForge / "Build Chain Theft" (Weaponized, High confidence, ransomware-associated: No) — SilentForge also exploiting JetBrains TeamCity CVE-2024-27198 authentication bypass to access build pipelines and extract secrets.
+- **Business service at risk:** DevOps Platform (owner: VP Engineering) — Build, deploy and monitoring toolchain offline; operational visibility lost. Customer-facing: No; compliance scope: SOC 2; RTO: 12h
+- **Why it ranks here:** The finding is ranked #4 because the publicly reachable TeamCity Authentication Bypass (CVE‑2024‑27198) is a confirmed, authentication‑less exploit used by the SilentForge “Build Chain Theft” campaign, the asset is high‑criticality and SOC 2‑in‑scope, yet no EDR protects it, making IA‑2(6) – Access to Accounts — separate Device the appropriate NIST control to mitigate this risk.
+- **NIST SP 800-53 Rev 5 guidance (retrieved via embeddings):**
+  - **IA-2(6) — Access to Accounts —separate Device** _(similarity 0.67)_: Implement multi-factor authentication for [organization-defined parameter] access to [organization-defined parameter] such that:
+(a) One of the factors is provided by a device separate from the system gaining access; and
+(b) The device meets [strength of mechanism requirements]....
+  - **IA-3 — Device Identification and Authentication** _(similarity 0.67)_: Uniquely identify and authenticate [devices and/or types of devices] before establishing a [organization-defined parameter] connection....
+
+---
+
+## #5 — partner-api-gateway-prod · Kong Gateway Admin API Exposed  (Risk score: 88/100)
+
+- **Asset:** partner-api-gateway-prod (API Server, Production, UAE) — owner: Partnerships Team; internet-exposed: Yes; EDR installed: Yes
+- **Vulnerability:** Kong Gateway Admin API Exposed (CVE-SYN-2026-0011, CVSS 9.3 Critical); exposure: Internet; auth required to exploit: No; patch available: Yes
+- **Threat intel match:** WinterViper / "Kong Gateway Exploit" (Weaponized, High confidence, ransomware-associated: Yes) — WinterViper group targeting exposed API gateway admin interfaces, particularly Kong. Exploitation provides full control over all proxied routes, enabling traffic interception and partner impersonation.
+- **Business service at risk:** Partner API Gateway (owner: VP Partnerships) — Bank and fintech partner integrations fail; SLA breach penalties apply. Customer-facing: Yes; compliance scope: PCI DSS, ISO 27001; RTO: 2h
+- **Why it ranks here:** The finding is ranked #5 of 5 because the internet‑exposed Kong Gateway Admin API is exploitable without authentication, is actively weaponized by the ransomware‑associated WinterViper campaign, and the partner‑facing, PCI DSS/ISO 27001‑critical API server has a 2‑hour RTO, making the lack of non‑privileged user interface controls (SC‑2(1)) a critical risk.
+- **NIST SP 800-53 Rev 5 guidance (retrieved via embeddings):**
+  - **SC-2(1) — Interfaces for Non-privileged Users** _(similarity 0.64)_: Prevent the presentation of system management functionality at interfaces to non-privileged users....
+  - **SC-7(15) — Networked Privileged Accesses** _(similarity 0.64)_: Route networked, privileged accesses through a dedicated, managed interface for purposes of access control and auditing....
 
 ---

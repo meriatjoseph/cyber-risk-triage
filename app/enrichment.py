@@ -6,13 +6,23 @@ CVEs against two independent sources of "is this actually exploited":
 2. threat_intelligence.csv (named campaigns/actors relevant to this
    environment, including the synthetic MDR advisory's five campaigns)
 
-Both are exact-match structured lookups (CVE string equality) -- no
-embeddings involved here. A CVE only counts as "campaign matched" if the
-threat_intelligence row's matched_cve_or_control field equals a real vuln CVE
-in this environment; the 15 intentional noise rows in that CSV target CVEs
-that don't exist in vulnerabilities.csv and will correctly produce zero
-matches.
+Both are structured lookups -- no embeddings involved here. A CVE counts
+as "campaign matched" if the threat_intelligence row's matched_cve_or_control
+field equals a real vuln CVE in this environment. 16 of the 40 intel rows
+don't match anything: 15 are intentional industry noise and correctly
+produce zero matches.
+
+The 16th is a near-miss, and it's why exact matching alone isn't enough:
+TI-3012 ("HR Data Theft") lists CVE-2025-0333, but the finding on
+hr-portal-prod is recorded as CVE-SYN-2025-0333 -- the same bug, the same
+"file upload" description, just with the synthetic-ID prefix. Pure string
+equality silently dropped it. So a second pass compares normalised IDs
+(see normalize_cve) and keeps any hit as a *possible* match: flagged
+near_miss=True, shown to the reader as "verify", and scored at reduced
+confidence (app/scoring.py) rather than either trusted outright or
+thrown away.
 """
+import re
 from dataclasses import dataclass, field
 
 import pandas as pd
@@ -34,6 +44,11 @@ class ThreatMatch:
     ransomware_association: bool
     confidence: str
     summary: str
+    # True when the intel row's CVE only matches this finding after
+    # normalisation (e.g. CVE-2025-0333 vs CVE-SYN-2025-0333). A human should
+    # confirm it's the same vulnerability before acting on it.
+    near_miss: bool = False
+    listed_cve: str = ""
 
 
 @dataclass
@@ -82,7 +97,11 @@ class EnrichedRisk:
 
     @property
     def has_campaign_match(self) -> bool:
-        return len(self.threat_matches) > 0
+        return any(not m.near_miss for m in self.threat_matches)
+
+    @property
+    def has_possible_campaign_match(self) -> bool:
+        return any(m.near_miss for m in self.threat_matches)
 
     @property
     def any_ransomware_signal(self) -> bool:
@@ -93,6 +112,48 @@ class EnrichedRisk:
 
 def _yn(val) -> bool:
     return str(val).strip().lower() == "yes"
+
+
+_SYN_PREFIX_RE = re.compile(r"^CVE-SYN-", re.I)
+
+
+def normalize_cve(cve_id: str) -> str:
+    """'CVE-SYN-2025-0333' -> 'CVE-2025-0333'; whitespace/case folded.
+    Only used to *suggest* a possible match, never to confirm one."""
+    return _SYN_PREFIX_RE.sub("CVE-", str(cve_id).strip().upper())
+
+
+def find_threat_matches(cve: str, intel: pd.DataFrame) -> list[ThreatMatch]:
+    """Exact matches first; then rows whose ID only matches after
+    normalize_cve(), flagged near_miss=True."""
+    matches = []
+    target_norm = normalize_cve(cve)
+    for _, row in intel.iterrows():
+        listed = str(row["matched_cve_or_control"]).strip()
+        if listed == cve:
+            near_miss = False
+        elif normalize_cve(listed) == target_norm:
+            near_miss = True
+        else:
+            continue
+        matches.append(
+            ThreatMatch(
+                intel_id=row["intel_id"],
+                threat_actor=row["threat_actor"],
+                campaign_name=row["campaign_name"],
+                target_sector=row["target_sector"],
+                target_region=row["target_region"],
+                exploit_maturity=row["exploit_maturity"],
+                active_last_seen=row["active_last_seen"],
+                ransomware_association=_yn(row["ransomware_association"]),
+                confidence=row["confidence"],
+                summary=row["summary"],
+                near_miss=near_miss,
+                listed_cve=listed,
+            )
+        )
+    matches.sort(key=lambda m: m.near_miss)
+    return matches
 
 
 def build_enriched_risks() -> list[EnrichedRisk]:
@@ -106,11 +167,12 @@ def build_enriched_risks() -> list[EnrichedRisk]:
     if config.KEV_CATALOG_JSON.exists():
         kev_index = load_kev_index()
 
-    # group threat intel by matched CVE for O(1) lookup (exact string match only)
-    intel_by_cve: dict[str, list[pd.Series]] = {}
-    for _, row in intel.iterrows():
-        cve = str(row["matched_cve_or_control"]).strip()
-        intel_by_cve.setdefault(cve, []).append(row)
+    # group threat intel by *normalised* ID so each vuln only scans the rows
+    # that could possibly match; find_threat_matches then decides exact vs near-miss
+    intel_by_norm: dict[str, pd.DataFrame] = {
+        key: grp for key, grp in intel.groupby(intel["matched_cve_or_control"].map(normalize_cve))
+    }
+    no_rows = intel.iloc[0:0]
 
     risks: list[EnrichedRisk] = []
     for _, v in vulns.iterrows():
@@ -124,22 +186,7 @@ def build_enriched_risks() -> list[EnrichedRisk]:
         cve = str(v["cve"]).strip()
         kev_entry = kev_index.get(cve)
 
-        matches = []
-        for row in intel_by_cve.get(cve, []):
-            matches.append(
-                ThreatMatch(
-                    intel_id=row["intel_id"],
-                    threat_actor=row["threat_actor"],
-                    campaign_name=row["campaign_name"],
-                    target_sector=row["target_sector"],
-                    target_region=row["target_region"],
-                    exploit_maturity=row["exploit_maturity"],
-                    active_last_seen=row["active_last_seen"],
-                    ransomware_association=_yn(row["ransomware_association"]),
-                    confidence=row["confidence"],
-                    summary=row["summary"],
-                )
-            )
+        matches = find_threat_matches(cve, intel_by_norm.get(normalize_cve(cve), no_rows))
 
         risk = EnrichedRisk(
             asset_id=a["asset_id"],
@@ -191,5 +238,9 @@ if __name__ == "__main__":
     print(f"  {len(kev_hits)} are confirmed in the real CISA KEV catalog")
     campaign_hits = [r for r in risks if r.has_campaign_match]
     print(f"  {len(campaign_hits)} have >=1 threat-intelligence campaign match")
+    for r in risks:
+        for m in r.threat_matches:
+            if m.near_miss:
+                print(f"  possible match (verify): {r.asset_name} {r.cve} ~ {m.intel_id} lists {m.listed_cve}")
     ransomware_hits = [r for r in risks if r.any_ransomware_signal]
     print(f"  {len(ransomware_hits)} carry a ransomware-association signal")

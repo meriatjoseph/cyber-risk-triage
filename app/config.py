@@ -24,3 +24,6 @@ TOP_N_RISKS = 5
 # template for the "why it ranks here" narrative (see app/explain.py).
 GROQ_API_KEY_ENV = "GROQ_API_KEY"
 GROQ_MODEL = "openai/gpt-oss-20b"
+
+# Shared secret for POST /refresh (see app/main.py). Unset = route disabled.
+REFRESH_TOKEN_ENV = "REFRESH_TOKEN"

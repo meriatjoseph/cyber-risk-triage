@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.enrichment import EnrichedRisk, ThreatMatch
-from app.scoring import rank_risks, score_risk
+from app.scoring import rank_grouped, rank_risks, score_risk
 
 
 def make_internal_high_cvss_dev_server() -> EnrichedRisk:
@@ -183,9 +183,68 @@ def test_one_per_asset_keeps_only_highest_finding_per_asset():
     assert other_asset.asset_id in asset_ids  # distinct asset still represented
 
 
+def test_near_miss_intel_match_scores_below_confirmed_match():
+    """A possible (normalised-ID) match still counts, but at one confidence
+    step lower than a confirmed match, and its reason says to verify."""
+    confirmed = make_exposed_payment_gateway_active_campaign()
+    confirmed.kev_listed = False
+    confirmed.kev_ransomware_known = False
+
+    possible = make_exposed_payment_gateway_active_campaign()
+    possible.kev_listed = False
+    possible.kev_ransomware_known = False
+    possible.threat_matches[0].near_miss = True
+    possible.threat_matches[0].listed_cve = "CVE-2024-99999X"
+
+    none = make_exposed_payment_gateway_active_campaign()
+    none.kev_listed = False
+    none.kev_ransomware_known = False
+    none.threat_matches = []
+
+    c, p, n = score_risk(confirmed), score_risk(possible), score_risk(none)
+    assert c.total > p.total > n.total
+    assert any("verify" in reason for reason in p.reasons)
+    assert not any("verify" in reason for reason in c.reasons)
+
+
+def test_grouping_collapses_same_finding_on_redundant_assets():
+    """Twin load balancers with the same CVE take one top-N slot, not two;
+    the twin is kept as also-affected with its own score."""
+    lb1 = make_exposed_payment_gateway_active_campaign()
+    lb2 = make_exposed_payment_gateway_active_campaign()
+    lb2.asset_id, lb2.asset_name, lb2.vuln_id = "A-TEST-2B", "payment-api-prod-02", "V-TEST-2B"
+    lb2.business_service = "Customer Login"
+    other = make_internal_high_cvss_dev_server()
+
+    groups = rank_grouped([lb1, lb2, other], top_n=2)
+    assert len(groups) == 2
+    rep, _, also = groups[0]
+    assert rep.cve == lb1.cve
+    assert [r.asset_id for r, _ in also] == [lb2.asset_id]
+    assert groups[1][0] is other  # the freed slot goes to a distinct risk
+
+
+def test_grouping_lists_twin_even_when_it_ranks_past_the_cutoff():
+    lb1 = make_exposed_payment_gateway_active_campaign()
+    weaker_twin = make_exposed_payment_gateway_active_campaign()
+    weaker_twin.asset_id, weaker_twin.vuln_id = "A-TEST-2C", "V-TEST-2C"
+    weaker_twin.internet_exposed = False
+    weaker_twin.asset_exposure = "Internal"  # same CVE, far lower score
+    middle = make_exposed_payment_gateway_active_campaign()
+    middle.asset_id, middle.vuln_id, middle.cve = "A-TEST-4", "V-TEST-4", "CVE-2024-88888"
+    middle.vulnerability_name = "Different bug"
+
+    groups = rank_grouped([lb1, middle, weaker_twin], top_n=1)
+    assert len(groups) == 1
+    assert [r.asset_id for r, _ in groups[0][2]] == [weaker_twin.asset_id]
+
+
 if __name__ == "__main__":
     test_exposure_and_campaign_beat_raw_cvss()
     test_no_campaign_match_can_still_reach_top_via_exposure_and_business_impact()
     test_score_breakdown_is_transparent_and_bounded()
     test_one_per_asset_keeps_only_highest_finding_per_asset()
+    test_near_miss_intel_match_scores_below_confirmed_match()
+    test_grouping_collapses_same_finding_on_redundant_assets()
+    test_grouping_lists_twin_even_when_it_ranks_past_the_cutoff()
     print("All scoring tests passed.")

@@ -293,6 +293,22 @@ _VULN_CLASS_HINTS: list[tuple[re.Pattern, str]] = [
         "check the validity of information inputs to prevent injection of "
         "malicious script content",
     ),
+    # Exposed admin/management planes (Kong admin API, K8s dashboard, VPN
+    # management plane). Without this, "Kong Gateway Admin API Exposed" had no
+    # hint and the TF-IDF backend returned a physical-access control. Kept last
+    # so "Unencrypted Management Interface" still takes the encryption hint.
+    (
+        re.compile(
+            r"admin (api|interface|panel|console|portal)|"
+            r"management (interface|console|port|api|plane)|"
+            r"(dashboard|console) exposed|exposed .*(admin|dashboard|console)",
+            re.I,
+        ),
+        "restrict network access to privileged administrative and management "
+        "interfaces, separate system management functionality from user "
+        "functionality, route privileged remote access through managed access "
+        "control points",
+    ),
 ]
 
 

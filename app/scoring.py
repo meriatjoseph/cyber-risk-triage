@@ -33,6 +33,10 @@ assert abs(sum(WEIGHTS.values()) - 1.0) < 1e-9
 
 _LEVEL_SCORE = {"Critical": 1.0, "High": 0.7, "Medium": 0.4, "Low": 0.15}
 _CONFIDENCE_SCORE = {"High": 1.0, "Medium": 0.7, "Low": 0.4}
+# A near-miss intel match (CVE ID only equal after normalisation, see
+# app/enrichment.py) is scored one confidence step lower than the feed
+# claims: it's probably the same bug, but nobody has confirmed that yet.
+_DOWNGRADE = {"High": "Medium", "Medium": "Low", "Low": "Low"}
 _MATURITY_SCORE = {
     "Weaponized": 0.85,
     "Active Exploitation": 0.9,
@@ -73,6 +77,17 @@ def _exposure_score(risk: EnrichedRisk) -> tuple[float, str | None]:
     return 0.0, None
 
 
+def _confidence(m) -> float:
+    level = _DOWNGRADE.get(m.confidence, m.confidence) if m.near_miss else m.confidence
+    return _CONFIDENCE_SCORE.get(level, 0.5)
+
+
+def _verify_suffix(m, risk: EnrichedRisk) -> str:
+    if not m.near_miss:
+        return ""
+    return f" -- possible match only: intel lists {m.listed_cve}, finding is recorded as {risk.cve}; verify"
+
+
 def _exploitation_score(risk: EnrichedRisk) -> tuple[float, list[str]]:
     reasons = []
     best = 0.0
@@ -83,13 +98,13 @@ def _exploitation_score(risk: EnrichedRisk) -> tuple[float, list[str]]:
 
     for m in risk.threat_matches:
         maturity_score = _MATURITY_SCORE.get(m.exploit_maturity, 0.3)
-        conf = _CONFIDENCE_SCORE.get(m.confidence, 0.5)
+        conf = _confidence(m)
         score = maturity_score * conf
         if score > best:
             best = score
         if maturity_score >= 0.6:
             phrase = _MATURITY_PHRASE.get(m.exploit_maturity, m.exploit_maturity.lower())
-            reasons.append(f"threat intel ({m.confidence} confidence) reports {phrase} by {m.threat_actor}/\"{m.campaign_name}\"")
+            reasons.append(f"threat intel ({m.confidence} confidence) reports {phrase} by {m.threat_actor}/\"{m.campaign_name}\"" + _verify_suffix(m, risk))
 
     if best == 0.0 and risk.exploit_available_csv:
         best = 0.3
@@ -109,13 +124,13 @@ def _campaign_score(risk: EnrichedRisk) -> tuple[float, list[str]]:
         reasons.append("CISA KEV flags this CVE with known ransomware campaign use")
 
     for m in risk.threat_matches:
-        conf = _CONFIDENCE_SCORE.get(m.confidence, 0.5)
+        conf = _confidence(m)
         if m.ransomware_association:
             score = 1.0 * conf
-            reasons.append(f"\"{m.campaign_name}\" ({m.threat_actor}) is a ransomware-associated campaign actively matching this CVE")
+            reasons.append(f"\"{m.campaign_name}\" ({m.threat_actor}) is a ransomware-associated campaign actively matching this CVE" + _verify_suffix(m, risk))
         else:
             score = 0.4 * conf
-            reasons.append(f"\"{m.campaign_name}\" ({m.threat_actor}) targets this CVE (no ransomware link confirmed)")
+            reasons.append(f"\"{m.campaign_name}\" ({m.threat_actor}) targets this CVE (no ransomware link confirmed)" + _verify_suffix(m, risk))
         best = max(best, score)
 
     return best, reasons
@@ -235,6 +250,34 @@ def rank_risks(
         if top_n and len(deduped) == top_n:
             break
     return deduped
+
+
+RankedGroup = tuple[EnrichedRisk, ScoreBreakdown, list[tuple[EnrichedRisk, ScoreBreakdown]]]
+
+
+def rank_grouped(risks: list[EnrichedRisk], top_n: int | None = None) -> list[RankedGroup]:
+    """Board-facing ranking: one_per_asset, then the same finding (same CVE
+    and vulnerability name) on several assets collapses into one entry.
+
+    Why: TawasolPay runs redundant pairs (two load balancers, two VPN edges).
+    Per-asset dedup alone still let CitrixBleed-on-LB-01 and CitrixBleed-on-
+    LB-02 take two of the five slots -- one fix, two slots. Grouping keeps the
+    highest-scoring asset as the entry's representative and lists the others
+    as also-affected (each with its own score and business service, since
+    twin boxes can front different services), freeing slots for distinct
+    risks. Returns (representative, its score, [(other_risk, other_score)])."""
+    groups: list[RankedGroup] = []
+    index: dict[tuple[str, str], int] = {}
+    for r, s in rank_risks(risks, one_per_asset=True):
+        key = (r.cve, r.vulnerability_name)
+        if key in index:
+            groups[index[key]][2].append((r, s))
+            continue
+        if top_n and len(groups) == top_n:
+            continue  # still scan: a later twin of an included group must be listed
+        index[key] = len(groups)
+        groups.append((r, s, []))
+    return groups
 
 
 if __name__ == "__main__":

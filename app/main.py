@@ -2,8 +2,17 @@
 FastAPI web app serving the top-5 risk report as a readable HTML page (and
 a markdown/JSON variant of the same data). The report is computed once at
 startup and cached; POST /refresh recomputes it.
+
+/refresh is the one route that does real work on demand (the full pipeline
+plus up to 5 Groq calls), and the demo is on a public URL, so it's gated:
+the caller must send an X-Refresh-Token header equal to the REFRESH_TOKEN
+env var. With REFRESH_TOKEN unset the route is disabled outright rather
+than left open.
 """
-from fastapi import FastAPI, Request
+import os
+import secrets
+
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 
@@ -48,7 +57,12 @@ def index(request: Request):
 
 
 @app.post("/refresh")
-def refresh():
+def refresh(x_refresh_token: str | None = Header(default=None)):
+    expected = os.environ.get(config.REFRESH_TOKEN_ENV)
+    if not expected:
+        raise HTTPException(status_code=403, detail="refresh is disabled (REFRESH_TOKEN not configured)")
+    if not x_refresh_token or not secrets.compare_digest(x_refresh_token, expected):
+        raise HTTPException(status_code=403, detail="invalid or missing X-Refresh-Token")
     get_entries(force=True)
     return JSONResponse({"status": "ok", "message": "report recomputed"})
 
@@ -79,6 +93,22 @@ def api_top5():
                 "vulnerability": e.risk.vulnerability_name,
                 "cve": e.risk.cve,
                 "business_service": e.risk.business_service,
+                "also_affected": [
+                    {"asset": o.asset_name, "business_service": o.business_service, "score": os_.total}
+                    for o, os_ in e.also_affected
+                ],
+                "threat_matches": [
+                    {
+                        "intel_id": m.intel_id,
+                        "threat_actor": m.threat_actor,
+                        "campaign": m.campaign_name,
+                        "ransomware_association": m.ransomware_association,
+                        "confidence": m.confidence,
+                        "possible_match_verify": m.near_miss,
+                        "intel_listed_cve": m.listed_cve,
+                    }
+                    for m in e.risk.threat_matches
+                ],
                 "why_it_ranks_here": e.why_it_ranks_here,
                 "nist_controls": [
                     {"control_id": c.control_id, "title": c.title, "similarity": c.similarity}

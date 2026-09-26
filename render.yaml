@@ -9,4 +9,6 @@ services:
         value: 8000
       - key: GROQ_API_KEY
         sync: false
+      - key: REFRESH_TOKEN
+        generateValue: true
     healthCheckPath: /health

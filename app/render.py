@@ -36,7 +36,9 @@ def render_markdown(entries: list[RiskReportEntry]) -> str:
                           + (", **known ransomware campaign use**" if r.kev_ransomware_known else ""))
         if r.threat_matches:
             for m in r.threat_matches:
-                lines.append(f"- **Threat intel match:** {m.threat_actor} / \"{m.campaign_name}\" "
+                label = (f"Possible threat intel match (verify — intel lists {m.listed_cve}, finding is {r.cve})"
+                         if m.near_miss else "Threat intel match")
+                lines.append(f"- **{label}:** {m.threat_actor} / \"{m.campaign_name}\" "
                               f"({m.exploit_maturity}, {m.confidence} confidence, "
                               f"ransomware-associated: {'Yes' if m.ransomware_association else 'No'}) — {m.summary}")
         else:
@@ -45,6 +47,9 @@ def render_markdown(entries: list[RiskReportEntry]) -> str:
         lines.append(f"- **Business service at risk:** {r.business_service} (owner: {r.business_owner}) — {r.business_impact}. "
                       f"Customer-facing: {'Yes' if r.customer_facing else 'No'}; compliance scope: {r.compliance_scope}"
                       f"{rto_clause}")
+        for o, os_ in e.also_affected:
+            lines.append(f"- **Same finding also on:** {o.asset_name} ({o.environment}) — "
+                          f"{o.business_service}, compliance scope: {o.compliance_scope} (score {os_.total:.0f}/100)")
         lines.append(f"- **Why it ranks here:** {e.why_it_ranks_here}")
         lines.append("- **NIST SP 800-53 Rev 5 guidance (retrieved via embeddings):**")
         for c in e.nist_controls:
